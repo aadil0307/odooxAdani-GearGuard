@@ -2,7 +2,7 @@ import { Response, NextFunction } from 'express';
 import { z } from 'zod';
 import * as requestService from '../services/request.service';
 import { successResponse } from '../utils/response';
-import { ValidationError } from '../utils/errors';
+import { ValidationError, ForbiddenError } from '../utils/errors';
 import { AuthenticatedRequest } from '../types/express';
 import { RequestType, RequestStatus } from '@prisma/client';
 
@@ -94,10 +94,23 @@ export const createRequest = async (
   next: NextFunction
 ) => {
   try {
+    // Check role-based permissions for request creation
+    const userRole = req.user!.role;
+    
+    // TECHNICIANs cannot create requests
+    if (userRole === 'TECHNICIAN') {
+      throw new ForbiddenError('Technicians cannot create maintenance requests');
+    }
+
     const validatedData = createRequestSchema.parse(req.body);
 
     if (!validatedData.subject || !validatedData.requestType || !validatedData.equipmentId) {
       throw new ValidationError('Subject, request type, and equipment are required');
+    }
+
+    // USERs can only create CORRECTIVE requests
+    if (userRole === 'USER' && validatedData.requestType === RequestType.PREVENTIVE) {
+      throw new ForbiddenError('Users can only create corrective maintenance requests');
     }
 
     const request = await requestService.createRequest({

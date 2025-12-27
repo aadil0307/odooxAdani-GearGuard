@@ -68,7 +68,9 @@ export const authOptions: NextAuthOptions = {
           const data = await response.json();
 
           if (!response.ok || !data.success) {
-            throw new Error(data.message || 'Login failed');
+            // Extract the specific error message from the backend response
+            const errorMessage = data.error?.message || data.message || 'Login failed';
+            throw new Error(errorMessage);
           }
 
           // Return user object with token
@@ -81,6 +83,7 @@ export const authOptions: NextAuthOptions = {
           };
         } catch (error: any) {
           console.error('Authorization error:', error);
+          // Re-throw the error with the original message
           throw new Error(error.message || 'Authentication failed');
         }
       },

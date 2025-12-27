@@ -12,7 +12,10 @@ export const apiClient: AxiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000,
+  // Reduce timeout to 15s for better responsiveness
+  timeout: 15000,
+  // Enable response compression
+  decompress: true,
 });
 
 // ============================================================================

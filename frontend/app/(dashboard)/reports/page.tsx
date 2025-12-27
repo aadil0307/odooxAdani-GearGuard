@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api-client';
@@ -45,6 +45,18 @@ export default function ReportsPage() {
 
   const reports = response?.data;
 
+  // Memoize expensive statistics calculations
+  const stats = useMemo(() => {
+    if (!reports) return null;
+
+    return {
+      totalRequests: reports.requestsByStatus.reduce((sum, item) => sum + item.count, 0),
+      activeTeams: reports.requestsByTeam.length,
+      totalEquipment: reports.equipmentByCategory.reduce((sum, item) => sum + item.count, 0),
+      currentMonthRequests: reports.monthlyRequests[reports.monthlyRequests.length - 1]?.count || 0,
+    };
+  }, [reports]);
+
   if (isLoading) {
     return <Loading text="Loading reports..." />;
   }
@@ -84,7 +96,7 @@ export default function ReportsPage() {
               <div>
                 <p className="text-sm text-gray-600">Total Requests</p>
                 <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {reports.requestsByStatus.reduce((sum, item) => sum + item.count, 0)}
+                  {stats?.totalRequests}
                 </p>
               </div>
               <Wrench className="h-8 w-8 text-blue-600" />
@@ -98,7 +110,7 @@ export default function ReportsPage() {
               <div>
                 <p className="text-sm text-gray-600">Active Teams</p>
                 <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {reports.requestsByTeam.length}
+                  {stats?.activeTeams}
                 </p>
               </div>
               <Users className="h-8 w-8 text-green-600" />
@@ -112,7 +124,7 @@ export default function ReportsPage() {
               <div>
                 <p className="text-sm text-gray-600">Equipment Items</p>
                 <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {reports.equipmentByCategory.reduce((sum, item) => sum + item.count, 0)}
+                  {stats?.totalEquipment}
                 </p>
               </div>
               <TrendingUp className="h-8 w-8 text-orange-600" />
@@ -126,7 +138,7 @@ export default function ReportsPage() {
               <div>
                 <p className="text-sm text-gray-600">This Month</p>
                 <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {reports.monthlyRequests[reports.monthlyRequests.length - 1]?.count || 0}
+                  {stats?.currentMonthRequests}
                 </p>
               </div>
               <Calendar className="h-8 w-8 text-purple-600" />

@@ -326,20 +326,18 @@ export const removeMember = async (teamId: string, userId: string) => {
     throw new NotFoundError('Team');
   }
 
-  // Check if member has active assigned requests
-  const activeAssignments = await prisma.maintenanceRequest.count({
+  // Unassign all active requests from the member before removal
+  // The requests remain with the team but are unassigned
+  await prisma.maintenanceRequest.updateMany({
     where: {
       teamId,
       assignedToId: userId,
       status: { in: ['NEW', 'IN_PROGRESS'] },
     },
+    data: {
+      assignedToId: null,
+    },
   });
-
-  if (activeAssignments > 0) {
-    throw new ValidationError(
-      `Cannot remove member with ${activeAssignments} active assigned request(s)`
-    );
-  }
 
   const updatedTeam = await prisma.maintenanceTeam.update({
     where: { id: teamId },

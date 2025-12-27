@@ -80,10 +80,16 @@ export const getAllRequests = async (
 
     const teamIds = userTeams.map((t: any) => t.id);
 
-    where.OR = [
-      { assignedToId: filters.userId },
-      { teamId: { in: teamIds } },
-    ];
+    // Build OR condition based on team membership
+    if (teamIds.length > 0) {
+      where.OR = [
+        { assignedToId: filters.userId },
+        { teamId: { in: teamIds } },
+      ];
+    } else {
+      // If technician is not in any team, only show requests assigned to them
+      where.assignedToId = filters.userId;
+    }
   }
   // Managers and Admins see all requests (no filter needed)
 

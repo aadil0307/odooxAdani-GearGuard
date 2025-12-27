@@ -26,6 +26,11 @@ export const registerUser = async (data: RegisterData) => {
     throw new ConflictError('User with this email already exists');
   }
 
+  // Restrict registration to only USER and TECHNICIAN roles
+  if (data.role && data.role !== UserRole.USER && data.role !== UserRole.TECHNICIAN) {
+    throw new ConflictError('Registration is only allowed for USER and TECHNICIAN roles');
+  }
+
   // Hash password
   const hashedPassword = await hashPassword(data.password);
 
@@ -68,19 +73,19 @@ export const loginUser = async (data: LoginData) => {
   });
 
   if (!user) {
-    throw new UnauthorizedError('Invalid email or password');
+    throw new UnauthorizedError('No account found with this email address');
   }
 
   // Check if user is active
   if (!user.isActive) {
-    throw new UnauthorizedError('Account is deactivated');
+    throw new UnauthorizedError('Your account has been deactivated. Please contact an administrator.');
   }
 
   // Verify password
   const isPasswordValid = await comparePassword(data.password, user.password);
 
   if (!isPasswordValid) {
-    throw new UnauthorizedError('Invalid email or password');
+    throw new UnauthorizedError('Incorrect password. Please try again.');
   }
 
   // Generate token

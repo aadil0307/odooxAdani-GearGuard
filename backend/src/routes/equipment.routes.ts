@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import * as equipmentController from '../controllers/equipment.controller';
 import { authenticate } from '../middleware/auth.middleware';
-import { requireManagerOrAdmin, requireAdmin } from '../middleware/rbac.middleware';
+import { requireManagerOrAdmin, requireAdmin, requireTechnicianOrAbove } from '../middleware/rbac.middleware';
 
 const router = Router();
 
@@ -32,16 +32,16 @@ router.get('/:id/maintenance-history', equipmentController.getEquipmentMaintenan
 /**
  * @route   POST /api/v1/equipment
  * @desc    Create new equipment
- * @access  Manager/Admin only
+ * @access  Technician and above
  */
-router.post('/', requireManagerOrAdmin, equipmentController.createEquipment);
+router.post('/', requireTechnicianOrAbove, equipmentController.createEquipment);
 
 /**
  * @route   PUT /api/v1/equipment/:id
  * @desc    Update equipment
- * @access  Manager/Admin only
+ * @access  Technician and above
  */
-router.put('/:id', requireManagerOrAdmin, equipmentController.updateEquipment);
+router.put('/:id', requireTechnicianOrAbove, equipmentController.updateEquipment);
 
 /**
  * @route   PATCH /api/v1/equipment/:id/scrap

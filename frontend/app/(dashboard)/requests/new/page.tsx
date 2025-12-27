@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSession } from 'next-auth/react';
 import { z } from 'zod';
 import api from '@/lib/api-client';
 import {
@@ -35,6 +36,16 @@ export default function NewRequestPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
+  const userRole = session?.user?.role;
+
+  // Redirect technicians - they cannot create requests
+  useEffect(() => {
+    if (userRole === 'TECHNICIAN') {
+      alert('Technicians cannot create maintenance requests');
+      router.push('/requests');
+    }
+  }, [userRole, router]);
 
   const equipmentIdParam = searchParams.get('equipmentId');
   const dateParam = searchParams.get('date');
@@ -52,12 +63,14 @@ export default function NewRequestPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Fetch equipment list
-  const { data: equipmentResponse } = useQuery<ApiResponse<Equipment[]>>({
+  const { data: equipmentResponse } = useQuery<ApiResponse<{ equipment: Equipment[]; pagination: any }>>({
     queryKey: ['equipment'],
     queryFn: () => api.get('/equipment'),
   });
 
-  const equipment = equipmentResponse?.data || [];
+  const equipment = (equipmentResponse?.success && equipmentResponse?.data?.equipment) 
+    ? equipmentResponse.data.equipment 
+    : [];
 
   // Fetch teams list
   const { data: teamsResponse } = useQuery<ApiResponse<MaintenanceTeam[]>>({
@@ -134,10 +147,30 @@ export default function NewRequestPage() {
     })),
   ];
 
-  const requestTypeOptions = Object.values(RequestType).map(type => ({
-    value: type,
-    label: enumToDisplay(type),
-  }));
+  const requestTypeOptions = useMemo(() => {
+    const allTypes = Object.values(RequestType).map(type => ({
+      value: type,
+      label: enumToDisplay(type),
+    }));
+    
+    // Users can only create CORRECTIVE requests
+    if (userRole === 'USER') {
+      return allTypes.filter(type => type.value === RequestType.CORRECTIVE);
+    }
+    
+    // Managers and Admins can create both types
+    return allTypes;
+  }, [userRole]);
+
+  // Show loading while checking role
+  if (!userRole) {
+    return <Loading text="Loading..." />;
+  }
+
+  // Technicians redirected by useEffect
+  if (userRole === 'TECHNICIAN') {
+    return null;
+  }
 
   return (
     <div className="space-y-6">

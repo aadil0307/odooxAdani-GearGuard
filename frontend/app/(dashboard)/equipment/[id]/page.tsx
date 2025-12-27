@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useState } from 'react';
+import { use, useState, useMemo, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -56,15 +56,38 @@ export default function EquipmentDetailPage({ params }: { params: Promise<{ id: 
   });
 
   // Fetch maintenance requests for this equipment
-  const { data: requestsResponse } = useQuery<ApiResponse<MaintenanceRequest[]>>({
+  const { data: requestsResponse } = useQuery<ApiResponse<{ requests: MaintenanceRequest[]; pagination: any }>>({
     queryKey: ['equipment-requests', id],
-    queryFn: () => api.get(`/maintenance-requests?equipmentId=${id}`),
+    queryFn: () => api.get(`/requests?equipmentId=${id}`),
   });
 
   const equipment = response?.data;
-  const requests = (requestsResponse?.success && Array.isArray(requestsResponse?.data)) 
-    ? requestsResponse.data 
+  const requests = (requestsResponse?.success && requestsResponse?.data?.requests) 
+    ? requestsResponse.data.requests 
     : [];
+
+  // Memoize calculations to avoid recalculating on every render
+  const stats = useMemo(() => {
+    const activeRequests = requests.filter(r => 
+      r.status !== RequestStatus.REPAIRED && r.status !== RequestStatus.SCRAP
+    ).length;
+    const completedRequests = requests.filter(r => r.status === RequestStatus.REPAIRED).length;
+    const pendingRequests = requests.filter(r => r.status === RequestStatus.NEW).length;
+    const inProgressRequests = requests.filter(r => r.status === RequestStatus.IN_PROGRESS).length;
+    const uptimePercentage = requests.length > 0 
+      ? Math.round(((requests.length - activeRequests) / requests.length) * 100) 
+      : 100;
+
+    return {
+      activeRequests,
+      completedRequests,
+      pendingRequests,
+      inProgressRequests,
+      uptimePercentage,
+    };
+  }, [requests]);
+
+  const { activeRequests, completedRequests, pendingRequests, inProgressRequests, uptimePercentage } = stats;
 
   // Delete mutation
   const deleteMutation = useMutation({
@@ -78,14 +101,33 @@ export default function EquipmentDetailPage({ params }: { params: Promise<{ id: 
     },
   });
 
-  const handleDelete = () => {
+  // Memoize delete handler to prevent recreation on every render
+  const handleDelete = useCallback(() => {
     if (showDeleteConfirm) {
       deleteMutation.mutate();
     } else {
       setShowDeleteConfirm(true);
       setTimeout(() => setShowDeleteConfirm(false), 3000);
     }
-  };
+  }, [showDeleteConfirm, deleteMutation]);
+
+  // Memoize status color calculation
+  const getStatusColor = useCallback(() => {
+    if (!equipment) return 'border-gray-500 bg-gray-50';
+    if (equipment.isScrap) return 'border-red-500 bg-red-50';
+    if (activeRequests > 5) return 'border-orange-500 bg-orange-50';
+    if (activeRequests > 0) return 'border-yellow-500 bg-yellow-50';
+    return 'border-green-500 bg-green-50';
+  }, [equipment, activeRequests]);
+
+  // Memoize status badge computation
+  const statusBadge = useMemo(() => {
+    if (!equipment) return { variant: 'default' as const, text: 'Unknown', icon: AlertTriangle };
+    if (equipment.isScrap) return { variant: 'danger' as const, text: 'Scrapped', icon: AlertTriangle };
+    if (activeRequests > 5) return { variant: 'danger' as const, text: 'Critical', icon: AlertTriangle };
+    if (activeRequests > 0) return { variant: 'warning' as const, text: 'Under Maintenance', icon: Wrench };
+    return { variant: 'success' as const, text: 'Operational', icon: CheckCircle };
+  }, [equipment, activeRequests]);
 
   if (isLoading) {
     return <Loading text="Loading equipment details..." />;
@@ -94,36 +136,6 @@ export default function EquipmentDetailPage({ params }: { params: Promise<{ id: 
   if (error || !equipment) {
     return <ErrorMessage message="Failed to load equipment details" type="error" />;
   }
-
-  // Calculate request statistics
-  const activeRequests = requests.filter(r => 
-    r.status !== RequestStatus.REPAIRED && r.status !== RequestStatus.SCRAP
-  ).length;
-  const completedRequests = requests.filter(r => r.status === RequestStatus.REPAIRED).length;
-  const pendingRequests = requests.filter(r => r.status === RequestStatus.NEW).length;
-  const inProgressRequests = requests.filter(r => r.status === RequestStatus.IN_PROGRESS).length;
-
-  // Calculate uptime percentage (mock calculation based on completed vs total requests)
-  const uptimePercentage = requests.length > 0 
-    ? Math.round(((requests.length - activeRequests) / requests.length) * 100) 
-    : 100;
-
-  // Get status color
-  const getStatusColor = () => {
-    if (equipment.isScrap) return 'border-red-500 bg-red-50';
-    if (activeRequests > 5) return 'border-orange-500 bg-orange-50';
-    if (activeRequests > 0) return 'border-yellow-500 bg-yellow-50';
-    return 'border-green-500 bg-green-50';
-  };
-
-  const getStatusBadge = () => {
-    if (equipment.isScrap) return { variant: 'danger' as const, text: 'Scrapped', icon: AlertTriangle };
-    if (activeRequests > 5) return { variant: 'danger' as const, text: 'Critical', icon: AlertTriangle };
-    if (activeRequests > 0) return { variant: 'warning' as const, text: 'Under Maintenance', icon: Wrench };
-    return { variant: 'success' as const, text: 'Operational', icon: CheckCircle };
-  };
-
-  const statusBadge = getStatusBadge();
 
   return (
     <div className="space-y-6 animate-slide-in">
@@ -169,14 +181,33 @@ export default function EquipmentDetailPage({ params }: { params: Promise<{ id: 
           </div>
         </div>
         <div className="flex gap-2">
+          {/* Smart Maintenance Button - Shows open requests */}
           <Button
-            variant="outline"
-            onClick={() => router.push(`/maintenance/new?equipmentId=${id}`)}
-            className="border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+            variant={activeRequests > 0 ? 'primary' : 'outline'}
+            onClick={() => router.push(`/requests?equipmentId=${id}&status=NEW,IN_PROGRESS`)}
+            className={activeRequests > 0 ? 'relative bg-orange-600 hover:bg-orange-700' : 'border-slate-300'}
           >
             <Wrench className="mr-2 h-4 w-4" />
-            New Request
+            Open Requests
+            {activeRequests > 0 && (
+              <Badge 
+                variant="danger" 
+                className="ml-2 bg-red-600 text-white font-bold px-2"
+              >
+                {activeRequests}
+              </Badge>
+            )}
           </Button>
+          {session?.user?.role !== 'TECHNICIAN' && (
+            <Button
+              variant="outline"
+              onClick={() => router.push(`/maintenance/new?equipmentId=${id}`)}
+              className="border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+            >
+              <Wrench className="mr-2 h-4 w-4" />
+              New Request
+            </Button>
+          )}
           <Button
             variant="outline"
             onClick={() => router.push(`/equipment/${id}/edit`)}

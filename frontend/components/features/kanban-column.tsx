@@ -42,7 +42,13 @@ export function KanbanColumn({ id, title, count, color, children }: KanbanColumn
           </div>
         </CardHeader>
         <CardContent className="space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto">
-          {children}
+          {count === 0 ? (
+            <div className="text-center py-8 text-gray-400">
+              <p className="text-sm">No requests</p>
+            </div>
+          ) : (
+            children
+          )}
         </CardContent>
       </Card>
     </div>

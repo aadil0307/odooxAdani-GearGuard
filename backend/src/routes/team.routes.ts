@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import * as teamController from '../controllers/team.controller';
 import { authenticate } from '../middleware/auth.middleware';
-import { requireManagerOrAdmin } from '../middleware/rbac.middleware';
+import { requireManagerOrAdmin, requireAdmin } from '../middleware/rbac.middleware';
 
 const router = Router();
 
@@ -39,9 +39,9 @@ router.put('/:id', requireManagerOrAdmin, teamController.updateTeam);
 /**
  * @route   DELETE /api/v1/teams/:id
  * @desc    Delete team
- * @access  Manager/Admin only
+ * @access  Admin only
  */
-router.delete('/:id', requireManagerOrAdmin, teamController.deleteTeam);
+router.delete('/:id', requireAdmin, teamController.deleteTeam);
 
 /**
  * @route   POST /api/v1/teams/:id/members

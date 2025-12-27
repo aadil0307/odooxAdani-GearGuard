@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSession } from 'next-auth/react';
 import {
   DndContext,
   DragEndEvent,
@@ -27,7 +28,17 @@ import { enumToDisplay } from '@/lib/utils';
 export default function KanbanPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
+  const userRole = session?.user?.role;
+  const userId = session?.user?.id;
   const [activeRequest, setActiveRequest] = useState<MaintenanceRequest | null>(null);
+
+  // Check if user can drag a specific request
+  const canDragRequest = useCallback((request: MaintenanceRequest) => {
+    if (userRole === 'ADMIN' || userRole === 'MANAGER') return true;
+    if (userRole === 'TECHNICIAN' && request.assignedToId === userId) return true;
+    return false;
+  }, [userRole, userId]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -38,12 +49,12 @@ export default function KanbanPage() {
   );
 
   // Fetch all requests
-  const { data: response, isLoading, error } = useQuery<ApiResponse<MaintenanceRequest[]>>({
+  const { data: response, isLoading, error } = useQuery<ApiResponse<{ requests: MaintenanceRequest[]; pagination: any }>>({
     queryKey: ['requests'],
     queryFn: () => api.get('/requests'),
   });
 
-  const requests = (response?.success && Array.isArray(response?.data)) ? response.data : [];
+  const requests = (response?.success && response?.data?.requests) ? response.data.requests : [];
 
   // Update request status mutation
   const updateStatusMutation = useMutation({
@@ -58,22 +69,23 @@ export default function KanbanPage() {
     },
   });
 
-  // Group requests by status
-  const columns = {
+  // Memoize grouped columns to avoid filtering on every render
+  const columns = useMemo(() => ({
     [RequestStatus.NEW]: requests.filter(r => r.status === RequestStatus.NEW),
     [RequestStatus.IN_PROGRESS]: requests.filter(r => r.status === RequestStatus.IN_PROGRESS),
     [RequestStatus.REPAIRED]: requests.filter(r => r.status === RequestStatus.REPAIRED),
     [RequestStatus.SCRAP]: requests.filter(r => r.status === RequestStatus.SCRAP),
-  };
+  }), [requests]);
 
-  const handleDragStart = (event: DragStartEvent) => {
+  // Memoize drag handlers to prevent recreation on every render
+  const handleDragStart = useCallback((event: DragStartEvent) => {
     const request = requests.find(r => r.id === event.active.id);
     if (request) {
       setActiveRequest(request);
     }
-  };
+  }, [requests]);
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
     setActiveRequest(null);
 
@@ -84,7 +96,7 @@ export default function KanbanPage() {
 
     // Update request status
     updateStatusMutation.mutate({ id: requestId, status: newStatus });
-  };
+  }, [updateStatusMutation]);
 
   if (isLoading) {
     return <Loading text="Loading requests..." />;
@@ -109,10 +121,12 @@ export default function KanbanPage() {
             <Filter className="mr-2 h-4 w-4" />
             List View
           </Button>
-          <Button onClick={() => router.push('/requests/new')}>
-            <Plus className="mr-2 h-4 w-4" />
-            New Request
-          </Button>
+          {userRole !== 'TECHNICIAN' && (
+            <Button onClick={() => router.push('/requests/new')}>
+              <Plus className="mr-2 h-4 w-4" />
+              New Request
+            </Button>
+          )}
         </div>
       </div>
 
@@ -174,7 +188,11 @@ export default function KanbanPage() {
             color="gray"
           >
             {columns[RequestStatus.NEW].map(request => (
-              <RequestCard key={request.id} request={request} />
+              <RequestCard 
+                key={request.id} 
+                request={request} 
+                canDrag={canDragRequest(request)}
+              />
             ))}
           </KanbanColumn>
 
@@ -185,7 +203,11 @@ export default function KanbanPage() {
             color="blue"
           >
             {columns[RequestStatus.IN_PROGRESS].map(request => (
-              <RequestCard key={request.id} request={request} />
+              <RequestCard 
+                key={request.id} 
+                request={request} 
+                canDrag={canDragRequest(request)}
+              />
             ))}
           </KanbanColumn>
 
@@ -196,7 +218,11 @@ export default function KanbanPage() {
             color="green"
           >
             {columns[RequestStatus.REPAIRED].map(request => (
-              <RequestCard key={request.id} request={request} />
+              <RequestCard 
+                key={request.id} 
+                request={request} 
+                canDrag={false}
+              />
             ))}
           </KanbanColumn>
 
@@ -207,7 +233,11 @@ export default function KanbanPage() {
             color="red"
           >
             {columns[RequestStatus.SCRAP].map(request => (
-              <RequestCard key={request.id} request={request} />
+              <RequestCard 
+                key={request.id} 
+                request={request} 
+                canDrag={false}
+              />
             ))}
           </KanbanColumn>
         </div>

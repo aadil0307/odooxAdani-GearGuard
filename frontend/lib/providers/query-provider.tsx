@@ -13,11 +13,21 @@ export function QueryProvider({ children }: QueryProviderProps) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 60 * 1000, // 1 minute
+            // Cache data for 5 minutes before considering it stale
+            staleTime: 5 * 60 * 1000,
+            // Keep unused data in cache for 10 minutes
+            gcTime: 10 * 60 * 1000,
+            // Don't refetch on window focus to reduce API calls
             refetchOnWindowFocus: false,
+            // Don't refetch on reconnect
+            refetchOnReconnect: false,
+            // Retry failed requests only once
             retry: 1,
+            // Retry delay
+            retryDelay: 1000,
           },
           mutations: {
+            // Retry mutations once on failure
             retry: 1,
           },
         },

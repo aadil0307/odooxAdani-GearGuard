@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
+import { useSession } from 'next-auth/react';
 import api from '@/lib/api-client';
 import {
   MaintenanceRequest,
@@ -30,13 +31,15 @@ import { enumToDisplay, formatDate } from '@/lib/utils';
 
 export default function RequestsPage() {
   const router = useRouter();
+  const { data: session } = useSession();
+  const userRole = session?.user?.role;
   
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [typeFilter, setTypeFilter] = useState<string>('');
   const [showFilters, setShowFilters] = useState(false);
 
-  const { data: response, isLoading, error } = useQuery<ApiResponse<MaintenanceRequest[]>>({
+  const { data: response, isLoading, error } = useQuery<ApiResponse<{ requests: MaintenanceRequest[]; pagination: any }>>({
     queryKey: ['requests', search, statusFilter, typeFilter],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -48,7 +51,7 @@ export default function RequestsPage() {
     },
   });
 
-  const requests = (response?.success && Array.isArray(response?.data)) ? response.data : [];
+  const requests = (response?.success && response?.data?.requests) ? response.data.requests : [];
 
   const statusOptions = [
     { value: '', label: 'All Statuses' },
@@ -116,10 +119,12 @@ export default function RequestsPage() {
             <Calendar className="mr-2 h-4 w-4" />
             Calendar
           </Button>
-          <Button onClick={() => router.push('/requests/new')}>
-            <Plus className="mr-2 h-4 w-4" />
-            New Request
-          </Button>
+          {userRole !== 'TECHNICIAN' && (
+            <Button onClick={() => router.push('/requests/new')}>
+              <Plus className="mr-2 h-4 w-4" />
+              New Request
+            </Button>
+          )}
         </div>
       </div>
 
@@ -205,25 +210,38 @@ export default function RequestsPage() {
         <Card>
           <CardContent className="p-0">
             <div className="divide-y">
-              {requests.map((request) => (
-                <div
-                  key={request.id}
-                  className="p-4 hover:bg-gray-50 cursor-pointer transition-colors"
-                  onClick={() => router.push(`/requests/${request.id}`)}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="font-medium text-gray-900 truncate">
-                          {request.subject}
-                        </h3>
-                        <Badge variant={getStatusVariant(request.status)}>
-                          {enumToDisplay(request.status)}
-                        </Badge>
-                        <Badge variant="info">
-                          {enumToDisplay(request.requestType)}
-                        </Badge>
-                      </div>
+              {requests.map((request) => {
+                // Check if request is overdue
+                const isOverdue = request.scheduledDate && 
+                  new Date(request.scheduledDate) < new Date() && 
+                  ![RequestStatus.REPAIRED, RequestStatus.SCRAP].includes(request.status);
+
+                return (
+                  <div
+                    key={request.id}
+                    className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
+                      isOverdue ? 'bg-red-50 border-l-4 border-l-red-500' : ''
+                    }`}
+                    onClick={() => router.push(`/requests/${request.id}`)}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                          {isOverdue && (
+                            <Badge variant="danger" className="font-semibold">
+                              OVERDUE
+                            </Badge>
+                          )}
+                          <h3 className="font-medium text-gray-900 truncate">
+                            {request.subject}
+                          </h3>
+                          <Badge variant={getStatusVariant(request.status)}>
+                            {enumToDisplay(request.status)}
+                          </Badge>
+                          <Badge variant="info">
+                            {enumToDisplay(request.requestType)}
+                          </Badge>
+                        </div>
                       
                       {request.description && (
                         <p className="text-sm text-gray-600 line-clamp-2 mb-2">
@@ -254,15 +272,16 @@ export default function RequestsPage() {
 
                     <div className="text-right text-sm text-gray-500 ml-4">
                       <div>Created {formatDate(request.createdAt)}</div>
-                      {request.completedDate && (
+                      {request.completedAt && (
                         <div className="text-green-600">
-                          Completed {formatDate(request.completedDate)}
+                          Completed {formatDate(request.completedAt)}
                         </div>
                       )}
                     </div>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>

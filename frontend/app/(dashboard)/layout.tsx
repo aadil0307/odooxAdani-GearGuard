@@ -11,7 +11,8 @@ import {
   BarChart3, 
   LogOut, 
   Menu,
-  X 
+  X,
+  Shield
 } from 'lucide-react';
 import { UserRole } from '@/types';
 import { useState } from 'react';
@@ -57,6 +58,12 @@ const navigation: NavItem[] = [
     href: '/reports',
     icon: BarChart3,
     roles: [UserRole.ADMIN, UserRole.MANAGER],
+  },
+  {
+    name: 'User Management',
+    href: '/users',
+    icon: Shield,
+    roles: [UserRole.ADMIN],
   },
 ];
 

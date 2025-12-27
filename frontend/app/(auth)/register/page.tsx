@@ -28,8 +28,6 @@ export default function RegisterPage() {
   const roleOptions = [
     { value: UserRole.USER, label: 'User (Create breakdown requests)' },
     { value: UserRole.TECHNICIAN, label: 'Technician (Work on requests)' },
-    { value: UserRole.MANAGER, label: 'Manager (Full access)' },
-    { value: UserRole.ADMIN, label: 'Admin (System administrator)' },
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {

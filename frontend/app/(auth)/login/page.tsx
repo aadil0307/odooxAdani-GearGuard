@@ -128,7 +128,7 @@ export default function LoginPage() {
             {/* Test Credentials */}
             <div className="mt-6 p-5 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200/50 shadow-inner">
               <p className="text-xs font-bold text-slate-700 mb-3 flex items-center gap-2">
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse inline-block"></span>
                 Test Credentials
               </p>
               <div className="space-y-1.5 text-xs text-slate-600">

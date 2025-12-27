@@ -40,7 +40,7 @@ export default function EquipmentPage() {
   const [showFilters, setShowFilters] = useState(false);
 
   // Fetch equipment
-  const { data: response, isLoading, error } = useQuery<ApiResponse<Equipment[]>>({
+  const { data: response, isLoading, error } = useQuery<ApiResponse<{ equipment: Equipment[]; pagination: any }>>({
     queryKey: ['equipment', search, categoryFilter, departmentFilter, scrapFilter],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -53,7 +53,7 @@ export default function EquipmentPage() {
     },
   });
 
-  const equipment = (response?.success && Array.isArray(response?.data)) ? response.data : [];
+  const equipment = (response?.success && response?.data?.equipment) ? response.data.equipment : [];
 
   // Category options
   const categoryOptions = [

@@ -14,11 +14,52 @@ import {
 } from 'lucide-react';
 import { UserRole } from '@/types';
 import { Badge } from '@/components/ui/badge';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '@/lib/api-client';
+
+interface DashboardStats {
+  requests: {
+    total: number;
+    new: number;
+    inProgress: number;
+    repaired: number;
+    overdue: number;
+    recentlyCreated: number;
+  };
+  equipment: {
+    total: number;
+    scrap: number;
+    active: number;
+  };
+  teams: {
+    total: number;
+  };
+  myTasks: {
+    active: number;
+  };
+}
 
 export default function DashboardPage() {
   const { data: session } = useSession();
   const user = session?.user;
   const userRole = user?.role as UserRole;
+
+  // Fetch dashboard stats
+  const { data: statsData, isLoading } = useQuery({
+    queryKey: ['dashboard-stats'],
+    queryFn: async () => {
+      const response = await api.get<DashboardStats>('/reports/dashboard');
+      return response.data;
+    },
+    enabled: !!session,
+  });
+
+  const stats = statsData || {
+    requests: { total: 0, new: 0, inProgress: 0, repaired: 0, overdue: 0, recentlyCreated: 0 },
+    equipment: { total: 0, scrap: 0, active: 0 },
+    teams: { total: 0 },
+    myTasks: { active: 0 },
+  };
 
   const getWelcomeMessage = () => {
     switch (userRole) {
@@ -100,7 +141,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Stats Cards - Placeholder for now */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <Card className="hover:scale-105 transition-transform cursor-pointer border-none shadow-xl bg-gradient-to-br from-blue-50 to-indigo-50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-transparent">
@@ -110,8 +151,12 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-slate-900">--</div>
-            <p className="text-xs text-slate-600 mt-1">Loading data...</p>
+            <div className="text-3xl font-bold text-slate-900">
+              {isLoading ? '--' : stats.requests.total}
+            </div>
+            <p className="text-xs text-slate-600 mt-1">
+              {isLoading ? 'Loading data...' : `${stats.requests.new || 0} new requests`}
+            </p>
           </CardContent>
         </Card>
 
@@ -123,7 +168,9 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-slate-900">--</div>
+            <div className="text-3xl font-bold text-slate-900">
+              {isLoading ? '--' : stats.requests.inProgress}
+            </div>
             <p className="text-xs text-slate-600 mt-1">Active tasks</p>
           </CardContent>
         </Card>
@@ -136,7 +183,9 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-slate-900">--</div>
+            <div className="text-3xl font-bold text-slate-900">
+              {isLoading ? '--' : stats.equipment.total}
+            </div>
             <p className="text-xs text-slate-600 mt-1">Total assets</p>
           </CardContent>
         </Card>
@@ -149,7 +198,9 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-slate-900">--</div>
+            <div className="text-3xl font-bold text-slate-900">
+              {isLoading ? '--' : stats.teams.total}
+            </div>
             <p className="text-xs text-slate-600 mt-1">Active teams</p>
           </CardContent>
         </Card>

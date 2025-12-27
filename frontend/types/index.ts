@@ -55,8 +55,10 @@ export interface User {
   email: string;
   name: string;
   role: UserRole;
+  isActive?: boolean;
   teamId?: string;
   team?: MaintenanceTeam;
+  teams?: { id: string; name: string }[]; // Multiple teams for technicians
   createdAt: string;
   updatedAt: string;
 }
@@ -94,9 +96,15 @@ export interface Equipment {
 export interface MaintenanceTeam {
   id: string;
   name: string;
+  description?: string;
+  isActive?: boolean;
   members: User[];
   createdAt: string;
   updatedAt: string;
+  _count?: {
+    maintenanceRequests?: number;
+    defaultForEquipment?: number;
+  };
 }
 
 // ============================================================================
@@ -115,9 +123,12 @@ export interface MaintenanceRequest {
   team?: MaintenanceTeam;
   assignedToId?: string;
   assignedTo?: User;
-  requestedById: string;
+  createdById: string;
+  createdBy?: User;
+  requestedById?: string;
   requestedBy?: User;
   scheduledDate?: string;
+  completedAt?: string;
   completedDate?: string;
   durationHours?: number;
   createdAt: string;
