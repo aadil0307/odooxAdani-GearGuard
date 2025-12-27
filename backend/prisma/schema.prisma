@@ -1,0 +1,185 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  TECHNICIAN
+  USER
+}
+
+enum RequestType {
+  CORRECTIVE  // Breakdown/Reactive
+  PREVENTIVE  // Scheduled/Planned
+}
+
+enum RequestStatus {
+  NEW
+  IN_PROGRESS
+  REPAIRED
+  SCRAP
+}
+
+enum EquipmentCategory {
+  MECHANICAL
+  ELECTRICAL
+  HVAC
+  PLUMBING
+  IT_HARDWARE
+  VEHICLES
+  TOOLS
+  FACILITIES
+  OTHER
+}
+
+enum Department {
+  PRODUCTION
+  MAINTENANCE
+  WAREHOUSE
+  ADMINISTRATION
+  IT
+  HR
+  QUALITY_ASSURANCE
+  LOGISTICS
+  SALES
+  OTHER
+}
+
+// ============================================================================
+// USER MODEL
+// ============================================================================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String   // Hashed password
+  name      String
+  role      UserRole @default(USER)
+  isActive  Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  teams                MaintenanceTeam[]      @relation("TeamMembers")
+  assignedRequests     MaintenanceRequest[]   @relation("AssignedTechnician")
+  createdRequests      MaintenanceRequest[]   @relation("RequestCreator")
+  assignedEquipment    Equipment[]            @relation("AssignedEmployee")
+
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+// ============================================================================
+// EQUIPMENT MODEL
+// ============================================================================
+
+model Equipment {
+  id                String             @id @default(cuid())
+  name              String
+  serialNumber      String             @unique
+  category          EquipmentCategory
+  department        Department
+  purchaseDate      DateTime
+  warrantyExpiry    DateTime?
+  physicalLocation  String
+  isScrap           Boolean            @default(false)
+  notes             String?
+
+  // Foreign Keys
+  assignedEmployeeId String?
+  defaultTeamId      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  assignedEmployee   User?               @relation("AssignedEmployee", fields: [assignedEmployeeId], references: [id], onDelete: SetNull)
+  defaultTeam        MaintenanceTeam?    @relation("DefaultTeam", fields: [defaultTeamId], references: [id], onDelete: SetNull)
+  maintenanceRequests MaintenanceRequest[]
+
+  @@index([serialNumber])
+  @@index([category])
+  @@index([department])
+  @@index([isScrap])
+  @@index([assignedEmployeeId])
+  @@index([defaultTeamId])
+  @@map("equipment")
+}
+
+// ============================================================================
+// MAINTENANCE TEAM MODEL
+// ============================================================================
+
+model MaintenanceTeam {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  members             User[]               @relation("TeamMembers")
+  maintenanceRequests MaintenanceRequest[]
+  defaultForEquipment Equipment[]          @relation("DefaultTeam")
+
+  @@index([name])
+  @@index([isActive])
+  @@map("maintenance_teams")
+}
+
+// ============================================================================
+// MAINTENANCE REQUEST MODEL
+// ============================================================================
+
+model MaintenanceRequest {
+  id              String         @id @default(cuid())
+  subject         String
+  description     String?
+  requestType     RequestType
+  status          RequestStatus  @default(NEW)
+  scheduledDate   DateTime?      // Required for PREVENTIVE, optional for CORRECTIVE
+  completedAt     DateTime?
+  durationHours   Float?         // Hours spent on the work
+
+  // Foreign Keys
+  equipmentId     String
+  teamId          String
+  assignedToId    String?
+  createdById     String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  equipment   Equipment        @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  team        MaintenanceTeam  @relation(fields: [teamId], references: [id], onDelete: Restrict)
+  assignedTo  User?            @relation("AssignedTechnician", fields: [assignedToId], references: [id], onDelete: SetNull)
+  createdBy   User             @relation("RequestCreator", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([equipmentId])
+  @@index([teamId])
+  @@index([assignedToId])
+  @@index([createdById])
+  @@index([status])
+  @@index([requestType])
+  @@index([scheduledDate])
+  @@index([createdAt])
+  @@map("maintenance_requests")
+}
