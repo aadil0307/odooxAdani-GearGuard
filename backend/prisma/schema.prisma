@@ -81,6 +81,8 @@ model User {
 
   @@index([email])
   @@index([role])
+  @@index([role, isActive])
+  @@index([isActive])
   @@map("users")
 }
 
@@ -118,6 +120,11 @@ model Equipment {
   @@index([isScrap])
   @@index([assignedEmployeeId])
   @@index([defaultTeamId])
+  // Composite indexes for common query patterns
+  @@index([category, department])
+  @@index([isScrap, category])
+  @@index([department, isScrap])
+  @@index([createdAt(sort: Desc)])
   @@map("equipment")
 }
 
@@ -181,5 +188,13 @@ model MaintenanceRequest {
   @@index([requestType])
   @@index([scheduledDate])
   @@index([createdAt])
+  // Composite indexes for complex queries
+  @@index([status, requestType])
+  @@index([teamId, status])
+  @@index([assignedToId, status])
+  @@index([equipmentId, status])
+  @@index([requestType, scheduledDate])
+  @@index([status, createdAt(sort: Desc)])
+  @@index([teamId, createdAt(sort: Desc)])
   @@map("maintenance_requests")
 }

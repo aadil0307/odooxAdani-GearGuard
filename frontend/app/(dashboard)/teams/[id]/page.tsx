@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { use, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api-client';
@@ -12,20 +12,23 @@ import { Loading } from '@/components/ui/loading';
 import { ErrorMessage } from '@/components/ui/error-message';
 import { ArrowLeft, Edit, Trash2, User } from 'lucide-react';
 
-export default function TeamDetailPage({ params }: { params: { id: string } }) {
+export default function TeamDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  
+  // Unwrap params Promise (Next.js 15+)
+  const { id } = use(params);
 
   const { data: response, isLoading, error } = useQuery<ApiResponse<MaintenanceTeam>>({
-    queryKey: ['teams', params.id],
-    queryFn: () => api.get(`/teams/${params.id}`),
+    queryKey: ['teams', id],
+    queryFn: () => api.get(`/teams/${id}`),
   });
 
   const team = response?.data;
 
   const deleteMutation = useMutation({
-    mutationFn: () => api.delete(`/teams/${params.id}`),
+    mutationFn: () => api.delete(`/teams/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['teams'] });
       router.push('/teams');
@@ -66,7 +69,7 @@ export default function TeamDetailPage({ params }: { params: { id: string } }) {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => router.push(`/teams/${params.id}/edit`)}>
+          <Button variant="outline" onClick={() => router.push(`/teams/${id}/edit`)}>
             <Edit className="mr-2 h-4 w-4" />
             Edit
           </Button>

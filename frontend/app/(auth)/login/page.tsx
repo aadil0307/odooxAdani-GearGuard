@@ -62,19 +62,32 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <div className="p-3 bg-blue-600 rounded-full">
-              <Wrench className="h-8 w-8 text-white" />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 px-4 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/30 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-500/30 rounded-full blur-3xl animate-pulse delay-700"></div>
+        <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      </div>
+
+      <Card className="w-full max-w-md backdrop-blur-xl bg-white/95 shadow-2xl border-none relative z-10">
+        <CardHeader className="text-center space-y-4 bg-gradient-to-br from-slate-50 to-blue-50/50">
+          <div className="flex justify-center">
+            <div className="p-4 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl shadow-lg shadow-blue-500/50">
+              <Wrench className="h-10 w-10 text-white" />
             </div>
           </div>
-          <CardTitle className="text-2xl">Welcome to GearGuard</CardTitle>
-          <CardDescription>Sign in to manage your maintenance requests</CardDescription>
+          <div>
+            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              Welcome to GearGuard
+            </CardTitle>
+            <CardDescription className="text-base mt-2 text-slate-600">
+              Sign in to manage your maintenance requests
+            </CardDescription>
+          </div>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <CardContent className="pt-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {error && <ErrorMessage message={error} type="error" />}
 
             <Input
@@ -99,23 +112,26 @@ export default function LoginPage() {
 
             <Button
               type="submit"
-              className="w-full"
+              className="w-full shadow-lg shadow-blue-500/50"
               isLoading={isLoading}
             >
               Sign In
             </Button>
 
-            <div className="text-center text-sm text-gray-600">
+            <div className="text-center text-sm text-slate-600">
               Don't have an account?{' '}
-              <Link href="/register" className="text-blue-600 hover:underline">
+              <Link href="/register" className="font-semibold text-blue-600 hover:text-indigo-600 transition-colors">
                 Register here
               </Link>
             </div>
 
             {/* Test Credentials */}
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-              <p className="text-xs font-semibold text-gray-700 mb-2">Test Credentials:</p>
-              <div className="space-y-1 text-xs text-gray-600">
+            <div className="mt-6 p-5 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200/50 shadow-inner">
+              <p className="text-xs font-bold text-slate-700 mb-3 flex items-center gap-2">
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                Test Credentials
+              </p>
+              <div className="space-y-1.5 text-xs text-slate-600">
                 <p><strong>Admin:</strong> admin@gearguard.com / password123</p>
                 <p><strong>Manager:</strong> manager1@gearguard.com / password123</p>
                 <p><strong>Technician:</strong> tech.mech1@gearguard.com / password123</p>

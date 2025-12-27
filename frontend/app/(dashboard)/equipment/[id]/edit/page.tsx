@@ -1,5 +1,6 @@
 'use client';
 
+import { use } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
@@ -10,13 +11,16 @@ import { Loading } from '@/components/ui/loading';
 import { ErrorMessage } from '@/components/ui/error-message';
 import { EquipmentForm } from '@/components/features/equipment-form';
 
-export default function EditEquipmentPage({ params }: { params: { id: string } }) {
+export default function EditEquipmentPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
+  
+  // Unwrap params Promise (Next.js 15+)
+  const { id } = use(params);
 
   // Fetch equipment details
   const { data: response, isLoading, error } = useQuery<ApiResponse<Equipment>>({
-    queryKey: ['equipment', params.id],
-    queryFn: () => api.get(`/equipment/${params.id}`),
+    queryKey: ['equipment', id],
+    queryFn: () => api.get(`/equipment/${id}`),
   });
 
   const equipment = response?.data;

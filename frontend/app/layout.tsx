@@ -11,6 +11,23 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "GearGuard - The Ultimate Maintenance Tracker",
   description: "Manage equipment, teams, and maintenance requests efficiently",
+  icons: {
+    icon: [
+      {
+        url: '/favicon.svg',
+        type: 'image/svg+xml',
+      },
+    ],
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
+  manifest: '/manifest.json',
+  themeColor: '#3b82f6',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'GearGuard',
+  },
 };
 
 export default function RootLayout({

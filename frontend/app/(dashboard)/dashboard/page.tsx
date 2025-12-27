@@ -83,69 +83,85 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-slide-in">
       {/* Welcome Section */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">
-          Welcome back, {user?.name}!
-        </h1>
-        <p className="mt-2 text-gray-600">{getWelcomeMessage()}</p>
-        <Badge variant="info" className="mt-2">
-          Role: {userRole}
-        </Badge>
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-8 shadow-2xl">
+        <div className="absolute top-0 right-0 -mt-4 -mr-4 h-40 w-40 rounded-full bg-white/10 blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 -mb-4 -ml-4 h-40 w-40 rounded-full bg-white/10 blur-3xl"></div>
+        <div className="relative">
+          <h1 className="text-4xl font-bold text-white drop-shadow-lg">
+            Welcome back, {user?.name}! 👋
+          </h1>
+          <p className="mt-3 text-blue-100 text-lg">{getWelcomeMessage()}</p>
+          <div className="mt-4 inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 border border-white/30">
+            <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+            <span className="text-sm font-semibold text-white">Role: {userRole}</span>
+          </div>
+        </div>
       </div>
 
       {/* Stats Cards - Placeholder for now */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Requests</CardTitle>
-            <ClipboardList className="h-4 w-4 text-gray-600" />
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <Card className="hover:scale-105 transition-transform cursor-pointer border-none shadow-xl bg-gradient-to-br from-blue-50 to-indigo-50">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-transparent">
+            <CardTitle className="text-sm font-bold text-slate-700">Total Requests</CardTitle>
+            <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg">
+              <ClipboardList className="h-5 w-5 text-white" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">--</div>
-            <p className="text-xs text-gray-500">Loading...</p>
+            <div className="text-3xl font-bold text-slate-900">--</div>
+            <p className="text-xs text-slate-600 mt-1">Loading data...</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">In Progress</CardTitle>
-            <AlertCircle className="h-4 w-4 text-blue-600" />
+        <Card className="hover:scale-105 transition-transform cursor-pointer border-none shadow-xl bg-gradient-to-br from-amber-50 to-orange-50">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-transparent">
+            <CardTitle className="text-sm font-bold text-slate-700">In Progress</CardTitle>
+            <div className="p-3 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl shadow-lg">
+              <AlertCircle className="h-5 w-5 text-white" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">--</div>
-            <p className="text-xs text-gray-500">Loading...</p>
+            <div className="text-3xl font-bold text-slate-900">--</div>
+            <p className="text-xs text-slate-600 mt-1">Active tasks</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Equipment</CardTitle>
-            <Wrench className="h-4 w-4 text-gray-600" />
+        <Card className="hover:scale-105 transition-transform cursor-pointer border-none shadow-xl bg-gradient-to-br from-emerald-50 to-green-50">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-transparent">
+            <CardTitle className="text-sm font-bold text-slate-700">Equipment</CardTitle>
+            <div className="p-3 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl shadow-lg">
+              <Wrench className="h-5 w-5 text-white" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">--</div>
-            <p className="text-xs text-gray-500">Loading...</p>
+            <div className="text-3xl font-bold text-slate-900">--</div>
+            <p className="text-xs text-slate-600 mt-1">Total assets</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Teams</CardTitle>
-            <Users className="h-4 w-4 text-gray-600" />
+        <Card className="hover:scale-105 transition-transform cursor-pointer border-none shadow-xl bg-gradient-to-br from-purple-50 to-pink-50">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-transparent">
+            <CardTitle className="text-sm font-bold text-slate-700">Teams</CardTitle>
+            <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl shadow-lg">
+              <Users className="h-5 w-5 text-white" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">--</div>
-            <p className="text-xs text-gray-500">Loading...</p>
+            <div className="text-3xl font-bold text-slate-900">--</div>
+            <p className="text-xs text-slate-600 mt-1">Active teams</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Quick Actions */}
       <div>
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-3">
+          <div className="w-1 h-8 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-full"></div>
+          Quick Actions
+        </h2>
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {filteredActions.map((action) => {
             const Icon = action.icon;
             return (
