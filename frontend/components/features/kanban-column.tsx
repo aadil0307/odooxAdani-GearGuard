@@ -32,19 +32,25 @@ export function KanbanColumn({ id, title, count, color, children }: KanbanColumn
   return (
     <div
       ref={setNodeRef}
-      className={`flex flex-col h-full ${isOver ? 'opacity-50' : ''}`}
+      className={`flex flex-col h-full transition-all duration-200 ${
+        isOver ? 'scale-105' : 'scale-100'
+      }`}
     >
-      <Card className={`flex-1 ${colorClasses[color]}`}>
+      <Card className={`flex-1 ${colorClasses[color]} ${
+        isOver ? 'ring-2 ring-blue-500 shadow-lg' : ''
+      } transition-all`}>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base font-semibold">{title}</CardTitle>
             <Badge variant={badgeVariants[color]}>{count}</Badge>
           </div>
         </CardHeader>
-        <CardContent className="space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto">
+        <CardContent className="space-y-3 min-h-[400px] max-h-[calc(100vh-300px)] overflow-y-auto">
           {count === 0 ? (
-            <div className="text-center py-8 text-gray-400">
-              <p className="text-sm">No requests</p>
+            <div className={`text-center py-8 ${
+              isOver ? 'text-blue-600' : 'text-gray-400'
+            } transition-colors`}>
+              <p className="text-sm">{isOver ? 'Drop here' : 'No requests'}</p>
             </div>
           ) : (
             children

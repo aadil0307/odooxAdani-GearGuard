@@ -209,8 +209,14 @@ export const updateEquipment = async (id: string, data: any) => {
   if (data.purchaseDate) {
     updateData.purchaseDate = new Date(data.purchaseDate);
   }
-  if (data.warrantyExpiry) {
-    updateData.warrantyExpiry = new Date(data.warrantyExpiry);
+  if (data.warrantyExpiry !== undefined) {
+    updateData.warrantyExpiry = data.warrantyExpiry ? new Date(data.warrantyExpiry) : null;
+  }
+  if (data.defaultTeamId !== undefined) {
+    updateData.defaultTeamId = data.defaultTeamId || null;
+  }
+  if (data.assignedEmployeeId !== undefined) {
+    updateData.assignedEmployeeId = data.assignedEmployeeId || null;
   }
 
   const equipment = await prisma.equipment.update({

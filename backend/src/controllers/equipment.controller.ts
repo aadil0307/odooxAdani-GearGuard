@@ -20,7 +20,9 @@ const createEquipmentSchema = z.object({
   notes: z.string().optional().nullable(),
 });
 
-const updateEquipmentSchema = createEquipmentSchema.partial();
+const updateEquipmentSchema = createEquipmentSchema.partial().extend({
+  isScrap: z.boolean().optional(),
+});
 
 export const getAllEquipment = async (
   req: AuthenticatedRequest,

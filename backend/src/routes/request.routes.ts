@@ -64,4 +64,18 @@ router.patch('/:id/status', requestController.updateRequestStatus);
  */
 router.patch('/:id/assign', requireManagerOrAdmin, requestController.assignTechnician);
 
+/**
+ * @route   POST /api/v1/requests/:id/approve
+ * @desc    Approve a pending request and assign team/technician
+ * @access  Manager/Admin only
+ */
+router.post('/:id/approve', requestController.approveRequest);
+
+/**
+ * @route   POST /api/v1/requests/:id/reject
+ * @desc    Reject and delete a pending request
+ * @access  Manager/Admin only
+ */
+router.post('/:id/reject', requestController.rejectRequest);
+
 export default router;

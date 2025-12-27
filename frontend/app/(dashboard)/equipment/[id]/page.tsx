@@ -208,14 +208,16 @@ export default function EquipmentDetailPage({ params }: { params: Promise<{ id: 
               New Request
             </Button>
           )}
-          <Button
-            variant="outline"
-            onClick={() => router.push(`/equipment/${id}/edit`)}
-            className="hover:bg-slate-100"
-          >
-            <Edit className="mr-2 h-4 w-4" />
-            Edit
-          </Button>
+          {session?.user?.role !== 'USER' && (
+            <Button
+              variant="outline"
+              onClick={() => router.push(`/equipment/${id}/edit`)}
+              className="hover:bg-slate-100"
+            >
+              <Edit className="mr-2 h-4 w-4" />
+              Edit
+            </Button>
+          )}
           {(session?.user?.role === UserRole.ADMIN || session?.user?.role === UserRole.MANAGER) && (
             <Button
               variant="danger"
@@ -526,14 +528,16 @@ export default function EquipmentDetailPage({ params }: { params: Promise<{ id: 
                   <Plus className="mr-2 h-4 w-4" />
                   New Maintenance Request
                 </Button>
-                <Button
-                  variant="outline"
-                  className="w-full border-white/30 bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm"
-                  onClick={() => router.push(`/equipment/${id}/edit`)}
-                >
-                  <Edit className="mr-2 h-4 w-4" />
-                  Edit Equipment
-                </Button>
+                {session?.user?.role !== 'USER' && (
+                  <Button
+                    variant="outline"
+                    className="w-full border-white/30 bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm"
+                    onClick={() => router.push(`/equipment/${id}/edit`)}
+                  >
+                    <Edit className="mr-2 h-4 w-4" />
+                    Edit Equipment
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   className="w-full border-white/30 bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm"

@@ -10,6 +10,7 @@ interface RequestFilters {
   teamId?: string;
   assignedToId?: string;
   createdById?: string;
+  isPending?: boolean;
   search?: string;
   userId?: string;
   userRole?: string;
@@ -42,16 +43,8 @@ export const getAllRequests = async (
     where.equipmentId = filters.equipmentId;
   }
 
-  if (filters.teamId) {
-    where.teamId = filters.teamId;
-  }
-
-  if (filters.assignedToId) {
-    where.assignedToId = filters.assignedToId;
-  }
-
-  if (filters.createdById) {
-    where.createdById = filters.createdById;
+  if (filters.isPending !== undefined) {
+    where.isPending = filters.isPending;
   }
 
   if (filters.search) {
@@ -80,18 +73,46 @@ export const getAllRequests = async (
 
     const teamIds = userTeams.map((t: any) => t.id);
 
-    // Build OR condition based on team membership
+    // Build OR condition for role-based access
+    const technicianConditions: any[] = [
+      { assignedToId: filters.userId },
+    ];
+    
     if (teamIds.length > 0) {
-      where.OR = [
-        { assignedToId: filters.userId },
-        { teamId: { in: teamIds } },
-      ];
+      technicianConditions.push({ teamId: { in: teamIds } });
+    }
+
+    // Combine with AND for any explicit filters
+    const technicianFilter: any[] = [{ OR: technicianConditions }];
+    
+    if (filters.teamId) {
+      technicianFilter.push({ teamId: filters.teamId });
+    }
+    if (filters.assignedToId) {
+      technicianFilter.push({ assignedToId: filters.assignedToId });
+    }
+    if (filters.createdById) {
+      technicianFilter.push({ createdById: filters.createdById });
+    }
+    
+    // Add to where clause with AND logic
+    if (technicianFilter.length > 1) {
+      where.AND = technicianFilter;
     } else {
-      // If technician is not in any team, only show requests assigned to them
-      where.assignedToId = filters.userId;
+      where.OR = technicianConditions;
+    }
+  } else {
+    // Managers and Admins see all requests - apply filters directly
+    if (filters.teamId) {
+      where.teamId = filters.teamId;
+    }
+    if (filters.assignedToId) {
+      where.assignedToId = filters.assignedToId;
+    }
+    if (filters.createdById) {
+      where.createdById = filters.createdById;
     }
   }
-  // Managers and Admins see all requests (no filter needed)
 
   const [requests, total] = await Promise.all([
     prisma.maintenanceRequest.findMany({
@@ -311,6 +332,8 @@ export const createRequest = async (data: {
       teamId,
       assignedToId: data.assignedToId,
       createdById: data.createdById,
+      // Set pending approval for user-created requests
+      isPending: data.userRole === UserRole.USER,
     },
     include: {
       equipment: {
@@ -784,4 +807,101 @@ export const getOverdueRequests = async (user: JwtPayload) => {
   });
 
   return requests;
+};
+
+// Approve a pending request
+export const approveRequest = async (
+  id: string,
+  approverId: string,
+  teamId: string,
+  assignedToId?: string | null
+) => {
+  const request = await prisma.maintenanceRequest.findUnique({
+    where: { id },
+  });
+
+  if (!request) {
+    throw new NotFoundError('Maintenance request');
+  }
+
+  if (!request.isPending) {
+    throw new ValidationError('Request is not pending approval');
+  }
+
+  // Validate team exists
+  const team = await prisma.maintenanceTeam.findUnique({
+    where: { id: teamId },
+  });
+
+  if (!team) {
+    throw new NotFoundError('Maintenance team');
+  }
+
+  // Validate technician if provided
+  if (assignedToId) {
+    const technician = await prisma.user.findUnique({
+      where: { id: assignedToId },
+      include: {
+        teams: {
+          where: { id: teamId },
+        },
+      },
+    });
+
+    if (!technician) {
+      throw new NotFoundError('Technician');
+    }
+
+    if (technician.teams.length === 0) {
+      throw new ValidationError('Assigned technician is not a member of the selected team');
+    }
+
+    if (
+      ![UserRole.TECHNICIAN, UserRole.MANAGER, UserRole.ADMIN].includes(technician.role as any)
+    ) {
+      throw new ValidationError('Assigned user must have TECHNICIAN, MANAGER, or ADMIN role');
+    }
+  }
+
+  const updatedRequest = await prisma.maintenanceRequest.update({
+    where: { id },
+    data: {
+      isPending: false,
+      approvedById: approverId,
+      approvedAt: new Date(),
+      teamId,
+      assignedToId: assignedToId || null,
+    },
+    include: {
+      equipment: true,
+      team: true,
+      assignedTo: true,
+      createdBy: true,
+      approvedBy: true,
+    },
+  });
+
+  return updatedRequest;
+};
+
+// Reject a pending request
+export const rejectRequest = async (id: string) => {
+  const request = await prisma.maintenanceRequest.findUnique({
+    where: { id },
+  });
+
+  if (!request) {
+    throw new NotFoundError('Maintenance request');
+  }
+
+  if (!request.isPending) {
+    throw new ValidationError('Request is not pending approval');
+  }
+
+  // Delete the request instead of keeping it
+  await prisma.maintenanceRequest.delete({
+    where: { id },
+  });
+
+  return { message: 'Request rejected and removed' };
 };

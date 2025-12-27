@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
 import api from '@/lib/api-client';
-import { Equipment, EquipmentCategory, Department } from '@/types';
+import { Equipment, EquipmentCategory, Department, MaintenanceTeam, ApiResponse } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
@@ -19,10 +19,10 @@ const equipmentSchema = z.object({
   category: z.nativeEnum(EquipmentCategory),
   department: z.nativeEnum(Department),
   physicalLocation: z.string().min(1, 'Location is required'),
-  assignedEmployeeName: z.string().optional(),
   purchaseDate: z.string().min(1, 'Purchase date is required'),
   warrantyExpiry: z.string().optional(),
   notes: z.string().optional(),
+  defaultTeamId: z.string().optional(),
   isScrap: z.boolean().optional(),
 });
 
@@ -45,24 +45,48 @@ export function EquipmentForm({ equipment, onSuccess, onCancel }: EquipmentFormP
     category: equipment?.category || EquipmentCategory.MECHANICAL,
     department: equipment?.department || Department.PRODUCTION,
     physicalLocation: equipment?.physicalLocation || '',
-    assignedEmployeeName: equipment?.assignedEmployeeName || '',
     purchaseDate: equipment?.purchaseDate ? new Date(equipment.purchaseDate).toISOString().split('T')[0] : '',
     warrantyExpiry: equipment?.warrantyExpiry ? new Date(equipment.warrantyExpiry).toISOString().split('T')[0] : '',
     notes: equipment?.notes || '',
+    defaultTeamId: equipment?.defaultTeamId || '',
     isScrap: equipment?.isScrap || false,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Fetch teams list
+  const { data: teamsResponse } = useQuery<ApiResponse<MaintenanceTeam[]>>({
+    queryKey: ['teams'],
+    queryFn: () => api.get('/teams'),
+  });
+
+  const teams = teamsResponse?.data || [];
+
   const mutation = useMutation({
     mutationFn: async (data: EquipmentFormData) => {
+      // Convert dates to ISO datetime format for backend
+      const payload: any = {
+        ...data,
+        purchaseDate: data.purchaseDate ? new Date(data.purchaseDate).toISOString() : undefined,
+        warrantyExpiry: data.warrantyExpiry ? new Date(data.warrantyExpiry).toISOString() : null,
+        defaultTeamId: data.defaultTeamId || null,
+      };
+      
+      // Remove empty strings
+      Object.keys(payload).forEach(key => {
+        if (payload[key] === '') {
+          payload[key] = null;
+        }
+      });
+      
       if (isEditing) {
-        return api.put(`/equipment/${equipment.id}`, data);
+        return api.put(`/equipment/${equipment.id}`, payload);
       }
-      return api.post('/equipment', data);
+      return api.post('/equipment', payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['equipment'] });
+      alert(isEditing ? 'Equipment updated successfully!' : 'Equipment created successfully!');
       if (onSuccess) {
         onSuccess();
       } else {
@@ -70,7 +94,21 @@ export function EquipmentForm({ equipment, onSuccess, onCancel }: EquipmentFormP
       }
     },
     onError: (error: any) => {
-      alert(error.response?.data?.message || 'Failed to save equipment');
+      const errorMessage = error.response?.data?.message || 'Failed to save equipment';
+      const errorDetails = error.response?.data?.details;
+      
+      if (errorDetails && Array.isArray(errorDetails)) {
+        const newErrors: Record<string, string> = {};
+        errorDetails.forEach((detail: any) => {
+          if (detail.path && detail.path[0]) {
+            newErrors[detail.path[0]] = detail.message;
+          }
+        });
+        setErrors(newErrors);
+        alert(errorMessage + '\n\nPlease check the form for errors.');
+      } else {
+        alert(errorMessage);
+      }
     },
   });
 
@@ -163,7 +201,7 @@ export function EquipmentForm({ equipment, onSuccess, onCancel }: EquipmentFormP
           </div>
 
           <div className="space-y-4 pt-6 border-t">
-            <h3 className="text-lg font-medium text-gray-900">Location & Assignment</h3>
+            <h3 className="text-lg font-medium text-gray-900">Location & Team Assignment</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
                 label="Physical Location"
@@ -173,11 +211,18 @@ export function EquipmentForm({ equipment, onSuccess, onCancel }: EquipmentFormP
                 placeholder="e.g., Building A, Floor 2"
                 required
               />
-              <Input
-                label="Assigned Employee Name"
-                value={formData.assignedEmployeeName}
-                onChange={(e) => handleChange('assignedEmployeeName', e.target.value)}
-                placeholder="Optional"
+              <Select
+                label="Default Maintenance Team"
+                value={formData.defaultTeamId}
+                onChange={(e) => handleChange('defaultTeamId', e.target.value)}
+                options={[
+                  { value: '', label: 'No default team' },
+                  ...teams.map(t => ({
+                    value: t.id,
+                    label: t.name,
+                  })),
+                ]}
+                error={errors.defaultTeamId}
               />
             </div>
           </div>
@@ -206,7 +251,7 @@ export function EquipmentForm({ equipment, onSuccess, onCancel }: EquipmentFormP
           <div className="space-y-4 pt-6 border-t">
             <h3 className="text-lg font-medium text-gray-900">Additional Details</h3>
             <textarea
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
               rows={4}
               value={formData.notes}
               onChange={(e) => handleChange('notes', e.target.value)}

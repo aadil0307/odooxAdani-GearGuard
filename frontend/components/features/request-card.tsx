@@ -29,23 +29,30 @@ export function RequestCard({ request, isDragging = false, canDrag = true }: Req
   const style = transform
     ? {
         transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-        cursor: 'grabbing',
       }
     : undefined;
 
   const handleClick = (e: React.MouseEvent) => {
-    if (!isDragging) {
+    // Prevent navigation when dragging
+    if (!isDragging && canDrag) {
+      router.push(`/requests/${request.id}`);
+    } else if (!canDrag) {
       router.push(`/requests/${request.id}`);
     }
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...(canDrag ? listeners : {})} {...(canDrag ? attributes : {})}>
+    <div 
+      ref={setNodeRef} 
+      style={style} 
+      {...(canDrag ? listeners : {})} 
+      {...(canDrag ? attributes : {})}
+    >
       <Card
         className={`${
-          canDrag ? 'cursor-grab' : 'cursor-pointer'
-        } hover:shadow-md transition-shadow ${
-          isDragging ? 'opacity-50' : ''
+          canDrag ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'
+        } hover:shadow-md transition-all duration-200 ${
+          isDragging ? 'opacity-40' : ''
         } ${
           isOverdue ? 'border-2 border-red-500 bg-red-50' : ''
         }`}

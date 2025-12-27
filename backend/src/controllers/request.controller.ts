@@ -42,6 +42,7 @@ export const getAllRequests = async (
       teamId,
       assignedToId,
       createdById,
+      isPending,
       search,
       page = '1',
       limit = '20',
@@ -54,6 +55,7 @@ export const getAllRequests = async (
       teamId: teamId as string | undefined,
       assignedToId: assignedToId as string | undefined,
       createdById: createdById as string | undefined,
+      isPending: isPending === 'true' ? true : isPending === 'false' ? false : undefined,
       search: search as string | undefined,
       userId: req.user?.userId,
       userRole: req.user?.role,
@@ -237,6 +239,62 @@ export const getOverdueRequests = async (
     const requests = await requestService.getOverdueRequests(req.user!);
 
     res.json(successResponse(requests));
+  } catch (error) {
+    next(error);
+  }
+};
+
+const approveRequestSchema = z.object({
+  teamId: z.string().min(1, 'Team ID is required'),
+  assignedToId: z.string().optional().nullable(),
+});
+
+export const approveRequest = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+    const userRole = req.user!.role;
+
+    // Only managers and admins can approve requests
+    if (userRole !== 'ADMIN' && userRole !== 'MANAGER') {
+      throw new ForbiddenError('Only managers and admins can approve requests');
+    }
+
+    const validatedData = approveRequestSchema.parse(req.body);
+
+    const request = await requestService.approveRequest(
+      id,
+      req.user!.userId,
+      validatedData.teamId,
+      validatedData.assignedToId
+    );
+
+    res.json(successResponse(request, 'Request approved successfully'));
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const rejectRequest = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+    const userRole = req.user!.role;
+
+    // Only managers and admins can reject requests
+    if (userRole !== 'ADMIN' && userRole !== 'MANAGER') {
+      throw new ForbiddenError('Only managers and admins can reject requests');
+    }
+
+    const result = await requestService.rejectRequest(id);
+
+    res.json(successResponse(result, 'Request rejected successfully'));
   } catch (error) {
     next(error);
   }

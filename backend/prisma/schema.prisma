@@ -77,6 +77,7 @@ model User {
   teams                MaintenanceTeam[]      @relation("TeamMembers")
   assignedRequests     MaintenanceRequest[]   @relation("AssignedTechnician")
   createdRequests      MaintenanceRequest[]   @relation("RequestCreator")
+  approvedRequests     MaintenanceRequest[]   @relation("RequestApprover")
   assignedEquipment    Equipment[]            @relation("AssignedEmployee")
 
   @@index([email])
@@ -164,6 +165,9 @@ model MaintenanceRequest {
   scheduledDate   DateTime?      // Required for PREVENTIVE, optional for CORRECTIVE
   completedAt     DateTime?
   durationHours   Float?         // Hours spent on the work
+  isPending       Boolean        @default(false) // Pending manager approval
+  approvedById    String?
+  approvedAt      DateTime?
 
   // Foreign Keys
   equipmentId     String
@@ -179,15 +183,18 @@ model MaintenanceRequest {
   team        MaintenanceTeam  @relation(fields: [teamId], references: [id], onDelete: Restrict)
   assignedTo  User?            @relation("AssignedTechnician", fields: [assignedToId], references: [id], onDelete: SetNull)
   createdBy   User             @relation("RequestCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  approvedBy  User?            @relation("RequestApprover", fields: [approvedById], references: [id], onDelete: SetNull)
 
   @@index([equipmentId])
   @@index([teamId])
   @@index([assignedToId])
   @@index([createdById])
+  @@index([approvedById])
   @@index([status])
   @@index([requestType])
   @@index([scheduledDate])
   @@index([createdAt])
+  @@index([isPending])
   // Composite indexes for complex queries
   @@index([status, requestType])
   @@index([teamId, status])

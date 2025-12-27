@@ -1,507 +1,909 @@
-# GearGuard – The Ultimate Maintenance Tracker
+# 🛠️ GearGuard CMMS
 
-[![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
-[![Prisma](https://img.shields.io/badge/Prisma-5.22-2D3748)](https://www.prisma.io/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-316192)](https://www.postgresql.org/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+**GearGuard** is a comprehensive Computerized Maintenance Management System (CMMS) designed to streamline equipment maintenance, work order management, and team coordination in industrial and enterprise environments.
 
-A comprehensive Computerized Maintenance Management System (CMMS) that streamlines equipment tracking, team management, and maintenance workflows with role-based access control and real-time analytics.
-
----
-
-## 🎯 Product Overview
-
-GearGuard seamlessly connects:
-- **Equipment** → What needs maintenance
-- **Teams** → Who performs the maintenance  
-- **Requests** → The work to be done
-
-### Key Capabilities
-- ✅ Track company assets with maintenance history
-- ✅ Manage specialized maintenance teams
-- ✅ Handle corrective (breakdown) and preventive (scheduled) maintenance
-- ✅ Kanban board with drag & drop
-- ✅ Calendar view for planned maintenance
-- ✅ Real-time analytics and reports
-- ✅ Role-based access control (RBAC)
+[![Next.js](https://img.shields.io/badge/Next.js-16.1-black?style=flat&logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat&logo=typescript)](https://www.typescriptlang.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue?style=flat&logo=postgresql)](https://www.postgresql.org/)
+[![Prisma](https://img.shields.io/badge/Prisma-5.22-2D3748?style=flat&logo=prisma)](https://www.prisma.io/)
+[![TailwindCSS](https://img.shields.io/badge/Tailwind-4.0-38B2AC?style=flat&logo=tailwind-css)](https://tailwindcss.com/)
 
 ---
 
-## 👥 User Roles
+## 📋 Table of Contents
 
-| Role | Permissions |
-|------|-------------|
-| **Admin** | Full system access - manage users, teams, equipment, and all requests |
-| **Manager** | Create preventive requests, assign technicians, view all requests |
-| **Technician** | View team requests, update status, log work duration |
-| **User** | Create breakdown requests, view own requests |
+- [Features](#-features)
+- [Tech Stack](#-tech-stack)
+- [System Architecture](#-system-architecture)
+- [Getting Started](#-getting-started)
+- [Project Structure](#-project-structure)
+- [API Documentation](#-api-documentation)
+- [User Roles & Permissions](#-user-roles--permissions)
+- [Database Schema](#-database-schema)
+- [Features in Detail](#-features-in-detail)
+- [Development](#-development)
+- [Deployment](#-deployment)
 
 ---
 
-## 🏗️ Tech Stack
+## ✨ Features
+
+### 🔐 Authentication & Authorization
+- **Secure Authentication** with JWT tokens and NextAuth.js
+- **Role-Based Access Control (RBAC)** with 4 user roles:
+  - 👑 **Admin**: Full system access
+  - 👨‍💼 **Manager**: Team and request management
+  - 🔧 **Technician**: Assigned maintenance tasks
+  - 👤 **User**: Request submission
+- **Session Management** with secure cookie handling
+- **Password Hashing** using bcrypt
+
+### 🏭 Equipment Management
+- **Complete Equipment Lifecycle Tracking**
+  - Equipment creation, editing, and deletion
+  - Serial number tracking and categorization
+  - Department assignment and location tracking
+  - Purchase date and warranty expiry management
+- **Equipment Categories**: Mechanical, Electrical, HVAC, Plumbing, IT Hardware, Vehicles, Tools, Facilities
+- **Status Monitoring**: Active, Under Maintenance, Scrapped
+- **Equipment Details View** with:
+  - Uptime percentage calculation
+  - Maintenance history timeline
+  - Active and completed request counts
+  - Visual status indicators
+- **Search & Filter** by category, department, and status
+- **Scrap Management** for end-of-life equipment
+
+### 🎫 Maintenance Request Management
+- **Multi-View Request Interface**:
+  - 📋 **List View**: Paginated table with filtering
+  - 📅 **Calendar View**: FullCalendar integration with drag-and-drop scheduling
+  - 🗂️ **Kanban Board**: Drag-and-drop status management
+- **Request Types**:
+  - ⚠️ **Corrective**: Breakdown/reactive maintenance
+  - 🔄 **Preventive**: Scheduled/planned maintenance
+- **Status Workflow**:
+  - 🆕 NEW → ⏳ IN_PROGRESS → ✅ REPAIRED → 🗑️ SCRAP
+- **Request Features**:
+  - Priority assignment
+  - Scheduled date management
+  - Team and technician assignment
+  - Duration tracking (repair time in hours)
+  - Equipment association
+  - Detailed descriptions and notes
+- **Approval Workflow**:
+  - User-created requests require manager approval
+  - Managers assign team and technician during approval
+  - Reject functionality to decline requests
+
+### 👥 Team Management
+- **Team Creation & Management**
+  - Create maintenance teams with descriptions
+  - Activate/deactivate teams
+  - View team member rosters
+- **Member Management**
+  - Add/remove team members
+  - View assigned equipment and requests per team
+- **Team Assignment**
+  - Default team assignment for equipment
+  - Request assignment to specific teams
+  - Team-based workload distribution
+
+### 👤 User Management
+- **User CRUD Operations**
+  - Create, read, update, and delete users
+  - Role assignment and modification
+  - Account activation/deactivation
+- **User Profiles** with:
+  - Contact information
+  - Role designation
+  - Team membership
+  - Activity tracking
+- **Search & Filter** by role, status, and name
+
+### 📊 Reports & Analytics
+- **Dashboard Statistics**:
+  - Total requests by status
+  - Pending approvals count
+  - Team workload distribution
+  - Equipment utilization metrics
+- **Visual Analytics**:
+  - 📈 **Bar Charts**: Requests by team
+  - 🥧 **Pie Charts**: Requests by category
+  - 📊 **Status Distribution**: Request status breakdown
+  - ⏱️ **Duration Analysis**: Average repair times
+- **Detailed Breakdowns**:
+  - Requests by maintenance team
+  - Requests by equipment category
+  - Requests by status
+  - Duration analysis with averages
+
+### 🎨 Modern UI/UX
+- **Responsive Design**: Mobile, tablet, and desktop optimized
+- **Intuitive Navigation**: Sidebar with role-based menu items
+- **Interactive Components**:
+  - Drag-and-drop interfaces (Kanban, Calendar)
+  - Modal dialogs for confirmations
+  - Toast notifications for actions
+  - Loading states and error handling
+- **Accessibility**: ARIA labels, keyboard navigation, screen reader support
+
+### 🔍 Advanced Features
+- **Real-time Updates**: React Query for automatic data synchronization
+- **Optimistic Updates**: Instant UI feedback
+- **Pagination**: Server-side pagination for large datasets
+- **Search & Filter**: Advanced filtering across all modules
+- **Data Validation**: Zod schema validation on frontend and backend
+- **Error Handling**: Comprehensive error messages and recovery
+- **Performance Optimization**: 
+  - Indexed database queries
+  - Memoized calculations
+  - Code splitting and lazy loading
+  - Debounced search inputs
+
+---
+
+## 🚀 Tech Stack
 
 ### Frontend
-- **Framework**: Next.js 14 (App Router) + TypeScript
-- **Styling**: Tailwind CSS
-- **State Management**: React Query (@tanstack/react-query)
-- **Authentication**: NextAuth.js (Credentials Provider)
-- **Drag & Drop**: @dnd-kit
-- **Calendar**: FullCalendar
-- **Charts**: Recharts
-- **HTTP Client**: Axios
+- **Framework**: [Next.js 16.1](https://nextjs.org/) (App Router, React Server Components)
+- **Language**: [TypeScript 5.0](https://www.typescriptlang.org/)
+- **UI Framework**: [React 19.2](https://react.dev/)
+- **Styling**: [TailwindCSS 4.0](https://tailwindcss.com/)
+- **State Management**: 
+  - [TanStack Query (React Query) 5.90](https://tanstack.com/query) - Server state management
+  - React Hooks - Component state
+- **Authentication**: [NextAuth.js 4.24](https://next-auth.js.org/)
+- **Form Validation**: [Zod 4.2](https://zod.dev/)
+- **HTTP Client**: [Axios 1.13](https://axios-http.com/)
+- **Drag & Drop**: [@dnd-kit 6.3](https://dndkit.com/)
+- **Calendar**: [FullCalendar 6.1](https://fullcalendar.io/)
+- **Charts**: [Recharts 3.6](https://recharts.org/)
+- **Icons**: [Lucide React 0.562](https://lucide.dev/)
+- **Date Utilities**: [date-fns 4.1](https://date-fns.org/)
 
 ### Backend
-- **Runtime**: Node.js 20+
-- **Framework**: Express 4.21
-- **ORM**: Prisma 5.22
-- **Database**: PostgreSQL (Railway)
-- **Auth**: JWT (jsonwebtoken)
-- **Validation**: Zod
+- **Runtime**: [Node.js](https://nodejs.org/)
+- **Framework**: [Express.js 4.21](https://expressjs.com/)
+- **Language**: [TypeScript 5.0](https://www.typescriptlang.org/)
+- **Database ORM**: [Prisma 5.22](https://www.prisma.io/)
+- **Database**: [PostgreSQL 15](https://www.postgresql.org/)
+- **Authentication**: 
+  - [JWT (jsonwebtoken) 9.0](https://github.com/auth0/node-jsonwebtoken)
+  - [bcryptjs 2.4](https://github.com/dcodeIO/bcrypt.js)
+- **Validation**: 
+  - [Zod 3.23](https://zod.dev/)
+  - [express-validator 7.2](https://express-validator.github.io/)
+- **Security**: [CORS 2.8](https://github.com/expressjs/cors)
+- **Environment**: [dotenv 16.4](https://github.com/motdotla/dotenv)
 
-### DevOps & Deployment
-- **Frontend**: Vercel
-- **Backend**: Railway
-- **Database**: Railway PostgreSQL
-- **CI/CD**: GitHub Actions (planned)
+### Development Tools
+- **Package Manager**: npm
+- **Code Quality**: ESLint
+- **Code Formatting**: Prettier
+- **Version Control**: Git
+- **API Testing**: Thunder Client / Postman
+- **Database Management**: Prisma Studio
 
-### Performance
-- **Bundle Optimization**: Code splitting, tree-shaking, lazy loading
-- **Caching Strategy**: React Query with 5min stale time, 10min gc
-- **Memoization**: useMemo/useCallback for expensive operations
-- **Network**: Response compression, reduced timeouts
-- **Result**: 31% smaller bundle, 80% fewer API calls, 3x faster loads
-
-📊 See [PERFORMANCE_OPTIMIZATIONS.md](PERFORMANCE_OPTIMIZATIONS.md) for details
-
----
-
-## 📂 Project Structure
-
-```
-GearGuard/
-├── backend/                          # Node.js + Express API
-│   ├── prisma/                       # Database schema & migrations
-│   │   ├── migrations/               # Auto-generated migrations
-│   │   ├── schema.prisma             # Prisma schema
-│   │   └── seed.ts                   # Seed data
-│   ├── src/
-│   │   ├── config/                   # Configuration
-│   │   ├── controllers/              # Route handlers
-│   │   ├── services/                 # Business logic
-│   │   ├── routes/                   # API routes
-│   │   ├── middleware/               # Auth, RBAC, error handling
-│   │   ├── utils/                    # Helpers
-│   │   ├── types/                    # TypeScript types
-│   │   └── index.ts                  # Server entry point
-│   ├── .env.example                  # Environment template
-│   ├── package.json
-│   └── tsconfig.json
-│
-├── frontend/                         # Next.js 14 Application
-│   ├── app/                          # App Router
-│   │   ├── (auth)/                   # Auth pages (login, register)
-│   │   ├── (dashboard)/              # Protected dashboard pages
-│   │   └── api/auth/[...nextauth]/   # NextAuth handler
-│   ├── components/
-│   │   └── ui/                       # Reusable UI components
-│   ├── lib/
-│   │   ├── providers/                # React providers
-│   │   ├── api-client.ts             # Axios client with JWT
-│   │   └── utils.ts                  # Helper functions
-│   ├── types/                        # TypeScript types
-│   ├── middleware.ts                 # Route protection
-│   ├── .env.example                  # Environment template
-│   ├── package.json
-│   ├── tailwind.config.ts
-│   └── tsconfig.json
-│
-├── docs/                             # Documentation
-│   ├── ARCHITECTURE.md               # System design
-│   ├── DATABASE.md                   # Schema docs
-│   ├── API.md                        # API reference
-│   ├── QUICKSTART.md                 # Setup guide
-│   └── PROGRESS.md                   # Development tracker
-│
-├── PROJECT_STRUCTURE.md              # Detailed folder structure
-├── .gitignore                        # Git ignore rules
-└── README.md                         # This file
-```
-
-**See [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) for detailed folder documentation.**
+### Deployment
+- **Frontend**: Vercel (recommended) / Netlify
+- **Backend**: Railway / Heroku / AWS
+- **Database**: Railway PostgreSQL / AWS RDS / Supabase
 
 ---
 
-## 🚀 Core Features
+## 🏗️ System Architecture
 
-### 1. Equipment Management
-- 📦 Track all company assets with detailed metadata
-- 🔍 Search & filter by department, category, assigned employee
-- 🚫 Scrap flag prevents new maintenance requests
-- 📊 Smart maintenance button shows request history with badge count
-
-### 2. Maintenance Teams
-- 👥 Organize technicians into specialized groups
-- 🎯 Team-based request assignment and visibility
-- 🔒 Restricted access - technicians see only team requests
-
-### 3. Maintenance Requests
-#### Request Types
-- **Corrective**: Unplanned breakdown repairs (any user)
-- **Preventive**: Scheduled routine maintenance (managers only)
-
-#### Workflow States
 ```
-New → In Progress → Repaired
-                  ↘ Scrap (equipment marked unusable)
+┌─────────────────────────────────────────────────────────────┐
+│                        CLIENT LAYER                         │
+│  ┌────────────┐  ┌────────────┐  ┌────────────┐            │
+│  │  Browser   │  │   Mobile   │  │   Tablet   │            │
+│  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘            │
+│        └────────────────┴────────────────┘                  │
+│                         │                                    │
+└─────────────────────────┼────────────────────────────────────┘
+                          │
+                    HTTPS/WSS
+                          │
+┌─────────────────────────┼────────────────────────────────────┐
+│                  FRONTEND (Next.js)                          │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │  App Router (Pages & Layouts)                         │  │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐            │  │
+│  │  │Dashboard │  │ Requests │  │Equipment │            │  │
+│  │  └──────────┘  └──────────┘  └──────────┘            │  │
+│  └───────────────────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │  State Management (React Query)                       │  │
+│  │  - Query Caching   - Optimistic Updates              │  │
+│  │  - Auto Refetch    - Background Sync                 │  │
+│  └───────────────────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │  Authentication (NextAuth.js)                         │  │
+│  │  - JWT Session     - Credential Provider             │  │
+│  └───────────────────────────────────────────────────────┘  │
+└─────────────────────────┼────────────────────────────────────┘
+                          │
+                    REST API (JSON)
+                          │
+┌─────────────────────────┼────────────────────────────────────┐
+│                  BACKEND (Express.js)                        │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │  API Routes & Controllers                             │  │
+│  │  /api/v1/auth    /api/v1/requests    /api/v1/users   │  │
+│  │  /api/v1/equipment    /api/v1/teams    /api/v1/reports│  │
+│  └───────────────────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │  Middleware Layer                                     │  │
+│  │  - Authentication  - Authorization  - Validation      │  │
+│  │  - Error Handling  - CORS          - Logging         │  │
+│  └───────────────────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │  Service Layer (Business Logic)                       │  │
+│  │  - Request Management  - User Management              │  │
+│  │  - Equipment Tracking  - Team Coordination            │  │
+│  └───────────────────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │  Data Access Layer (Prisma ORM)                       │  │
+│  │  - Query Building  - Transactions  - Migrations       │  │
+│  └───────────────────────────────────────────────────────┘  │
+└─────────────────────────┼────────────────────────────────────┘
+                          │
+                     Prisma Client
+                          │
+┌─────────────────────────┼────────────────────────────────────┐
+│                   DATABASE (PostgreSQL)                      │
+│  ┌────────────┐  ┌────────────┐  ┌────────────┐            │
+│  │   Users    │  │ Equipment  │  │  Requests  │            │
+│  └────────────┘  └────────────┘  └────────────┘            │
+│  ┌────────────┐  ┌────────────┐                            │
+│  │   Teams    │  │   Indexes  │                            │
+│  └────────────┘  └────────────┘                            │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-#### Smart Features
-- Auto-fill category & team from equipment selection
-- Scheduled date validation for preventive requests
-- Overdue detection (scheduled date passed + not repaired)
-- Duration tracking in hours
+### Request Flow Example
 
-### 4. Kanban Board
-- 🎨 Drag & drop interface with @dnd-kit
-- 👤 Assigned technician avatars
-- 🔴 Overdue requests highlighted in red
-- 🔄 Real-time status updates
-
-### 5. Calendar View
-- 📅 FullCalendar integration
-- 🗓️ Displays only preventive maintenance
-- ➕ Click date to create scheduled request
-
-### 6. Reports & Analytics
-- 📈 Dashboard with real-time metrics
-- 📊 Requests by team, category, status
-- ⏱️ Duration analysis (avg, min, max)
-- 🎯 Role-based filtering (USER sees own, TECHNICIAN sees team, MANAGER/ADMIN sees all)
+```
+User Action (Click "Create Request")
+         ↓
+Frontend Form Validation (Zod)
+         ↓
+React Query Mutation
+         ↓
+Axios HTTP POST to /api/v1/requests
+         ↓
+Backend Authentication Middleware
+         ↓
+Request Validation (express-validator)
+         ↓
+Service Layer (createRequest)
+         ↓
+Prisma ORM (Database Insert)
+         ↓
+PostgreSQL Transaction
+         ↓
+Response to Frontend
+         ↓
+React Query Cache Update
+         ↓
+UI Re-render with New Data
+```
 
 ---
 
-## 🚦 Quick Start
+## 🎯 Getting Started
 
 ### Prerequisites
-- Node.js 20+
-- PostgreSQL database (Railway recommended)
-- npm or yarn
 
-### 1. Clone & Install
+- **Node.js** >= 18.0.0
+- **npm** or **yarn**
+- **PostgreSQL** >= 15.0
+- **Git**
+
+### Installation
+
+#### 1. Clone the Repository
 
 ```bash
-# Clone repository
 git clone https://github.com/yourusername/gearguard.git
 cd gearguard
-
-# Install backend dependencies
-cd backend
-npm install
-
-# Install frontend dependencies
-cd ../frontend
-npm install
 ```
 
-### 2. Environment Setup
+#### 2. Setup Backend
 
-**Backend** (`backend/.env`):
+```bash
+cd backend
+
+# Install dependencies
+npm install
+
+# Create .env file
+cp .env.example .env
+```
+
+**Configure `.env` file:**
+
 ```env
-DATABASE_URL="postgresql://user:password@host:port/database"
-JWT_SECRET="your-super-secret-jwt-key-min-32-chars"
+# Database
+DATABASE_URL="postgresql://username:password@localhost:5432/gearguard?schema=public"
+
+# JWT Secret (use a strong random string)
+JWT_SECRET="your-super-secret-jwt-key-change-this-in-production"
+
+# Server
 PORT=5000
 NODE_ENV=development
+
+# CORS
+FRONTEND_URL=http://localhost:3000
 ```
 
-**Frontend** (`frontend/.env.local`):
-```env
-NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET="your-super-secret-nextauth-key-min-32-chars"
-NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1
-```
-
-### 3. Database Setup
+**Initialize Database:**
 
 ```bash
-cd backend
-
 # Generate Prisma Client
-npx prisma generate
+npm run prisma:generate
 
-# Run migrations
-npx prisma migrate dev --name init
+# Run database migrations
+npm run prisma:migrate
 
-# Seed database with test data
-npx prisma db seed
+# Seed the database with sample data (optional)
+npm run db:seed
 ```
 
-### 4. Run Development Servers
+**Start Backend Server:**
 
-**Terminal 1 - Backend:**
 ```bash
-cd backend
 npm run dev
-# Backend runs on http://localhost:5000
 ```
 
-**Terminal 2 - Frontend:**
+Backend will run on `http://localhost:5000`
+
+#### 3. Setup Frontend
+
 ```bash
-cd frontend
-npm run dev
-# Frontend runs on http://localhost:3000
+cd ../frontend
+
+# Install dependencies
+npm install
+
+# Create .env.local file
+cp .env.example .env.local
 ```
 
-### 5. Login & Test
+**Configure `.env.local` file:**
 
-Visit `http://localhost:3000` and login with test credentials:
+```env
+# Backend API URL
+NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1
+
+# NextAuth Configuration
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET="your-nextauth-secret-key-change-this-in-production"
+```
+
+**Start Frontend Server:**
+
+```bash
+npm run dev
+```
+
+Frontend will run on `http://localhost:3000`
+
+#### 4. Access the Application
+
+Open your browser and navigate to:
+- **Frontend**: `http://localhost:3000`
+- **Backend API**: `http://localhost:5000/api/v1`
+- **Prisma Studio** (Database GUI): Run `npm run prisma:studio` in backend folder
+
+### Default Credentials (After Seeding)
 
 | Role | Email | Password |
 |------|-------|----------|
-| Admin | admin@gearguard.com | password123 |
-| Manager | manager1@gearguard.com | password123 |
-| Technician | tech.mech1@gearguard.com | password123 |
-| User | user1@gearguard.com | password123 |
+| Admin | admin@gearguard.com | admin123 |
+| Manager | manager@gearguard.com | manager123 |
+| Technician | tech@gearguard.com | tech123 |
+| User | user@gearguard.com | user123 |
+
+
 
 ---
 
-## 📚 Documentation
+## 📁 Project Structure
 
-| Document | Description |
-|----------|-------------|
-| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | System architecture & design decisions |
-| [DATABASE.md](docs/DATABASE.md) | Database schema & relationships |
-| [API.md](docs/API.md) | Complete API reference with examples |
-| [QUICKSTART.md](docs/QUICKSTART.md) | Detailed setup guide |
-| [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) | Folder structure & conventions |
-| [PROGRESS.md](docs/PROGRESS.md) | Development progress tracker |
+```
+gearguard/
+├── backend/                      # Express.js Backend
+│   ├── prisma/
+│   │   ├── migrations/          # Database migrations
+│   │   ├── schema.prisma        # Database schema
+│   │   └── seed.ts              # Database seeding script
+│   ├── src/
+│   │   ├── controllers/         # Request handlers
+│   │   │   ├── auth.controller.ts
+│   │   │   ├── equipment.controller.ts
+│   │   │   ├── request.controller.ts
+│   │   │   ├── team.controller.ts
+│   │   │   ├── user.controller.ts
+│   │   │   └── report.controller.ts
+│   │   ├── services/            # Business logic
+│   │   │   ├── auth.service.ts
+│   │   │   ├── equipment.service.ts
+│   │   │   ├── request.service.ts
+│   │   │   ├── team.service.ts
+│   │   │   ├── user.service.ts
+│   │   │   └── report.service.ts
+│   │   ├── middleware/          # Express middleware
+│   │   │   ├── auth.middleware.ts
+│   │   │   ├── error.middleware.ts
+│   │   │   └── validate.middleware.ts
+│   │   ├── routes/              # API routes
+│   │   │   ├── auth.routes.ts
+│   │   │   ├── equipment.routes.ts
+│   │   │   ├── request.routes.ts
+│   │   │   ├── team.routes.ts
+│   │   │   ├── user.routes.ts
+│   │   │   └── report.routes.ts
+│   │   ├── types/               # TypeScript types
+│   │   ├── utils/               # Utility functions
+│   │   └── index.ts             # Server entry point
+│   ├── .env                     # Environment variables
+│   ├── package.json
+│   └── tsconfig.json
+│
+├── frontend/                    # Next.js Frontend
+│   ├── app/
+│   │   ├── (auth)/             # Authentication pages
+│   │   │   ├── login/
+│   │   │   └── register/
+│   │   ├── (dashboard)/        # Protected dashboard pages
+│   │   │   ├── dashboard/
+│   │   │   ├── requests/
+│   │   │   │   ├── page.tsx              # List view
+│   │   │   │   ├── kanban/               # Kanban board
+│   │   │   │   ├── calendar/             # Calendar view
+│   │   │   │   ├── pending/              # Pending approvals
+│   │   │   │   ├── new/                  # Create request
+│   │   │   │   ├── [id]/                 # Request details
+│   │   │   │   └── [id]/edit/            # Edit request
+│   │   │   ├── equipment/
+│   │   │   │   ├── page.tsx              # Equipment list
+│   │   │   │   ├── [id]/                 # Equipment details
+│   │   │   │   └── [id]/edit/            # Edit equipment
+│   │   │   ├── teams/
+│   │   │   │   ├── page.tsx              # Teams list
+│   │   │   │   ├── new/                  # Create team
+│   │   │   │   ├── [id]/                 # Team details
+│   │   │   │   └── [id]/edit/            # Edit team
+│   │   │   ├── users/
+│   │   │   │   └── page.tsx              # User management
+│   │   │   └── reports/
+│   │   │       └── page.tsx              # Analytics & reports
+│   │   ├── api/                # API route handlers
+│   │   │   └── auth/
+│   │   │       └── [...nextauth]/
+│   │   ├── layout.tsx          # Root layout
+│   │   └── page.tsx            # Landing page
+│   ├── components/
+│   │   ├── ui/                 # Reusable UI components
+│   │   │   ├── button.tsx
+│   │   │   ├── card.tsx
+│   │   │   ├── input.tsx
+│   │   │   ├── select.tsx
+│   │   │   ├── dialog.tsx
+│   │   │   ├── badge.tsx
+│   │   │   └── ...
+│   │   ├── features/           # Feature-specific components
+│   │   │   ├── kanban-column.tsx
+│   │   │   ├── request-card.tsx
+│   │   │   ├── equipment-form.tsx
+│   │   │   └── ...
+│   │   └── layout/             # Layout components
+│   │       ├── sidebar.tsx
+│   │       ├── navbar.tsx
+│   │       └── dashboard-layout.tsx
+│   ├── lib/
+│   │   ├── api-client.ts       # Axios configuration
+│   │   ├── utils.ts            # Utility functions
+│   │   └── auth-options.ts     # NextAuth configuration
+│   ├── types/
+│   │   └── index.ts            # TypeScript types
+│   ├── .env.local              # Environment variables
+│   ├── next.config.js
+│   ├── tailwind.config.ts
+│   ├── package.json
+│   └── tsconfig.json
+│
+├── docs/                       # Documentation
+├── .gitignore
+├── README.md
+└── LICENSE
+```
 
 ---
 
-## 🔒 Security Features
+## 🔌 API Documentation
 
-- ✅ JWT-based authentication with secure token storage
-- ✅ Role-Based Access Control (RBAC) with 4 permission levels
-- ✅ Team-restricted visibility for technicians
-- ✅ Permission-guarded API endpoints
-- ✅ Password hashing with bcrypt
-- ✅ Environment variable security
-- ✅ CORS configuration for API protection
+### Base URL
+```
+http://localhost:5000/api/v1
+```
+
+### Authentication Endpoints
+
+#### Register User
+```http
+POST /auth/register
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "password123",
+  "name": "John Doe",
+  "role": "USER"
+}
+```
+
+#### Login
+```http
+POST /auth/login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+
+Response:
+{
+  "success": true,
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "user": {
+      "id": "clx...",
+      "email": "user@example.com",
+      "name": "John Doe",
+      "role": "USER"
+    }
+  }
+}
+```
+
+#### Get Current User
+```http
+GET /auth/me
+Authorization: Bearer {token}
+```
+
+### Equipment Endpoints
+
+#### Get All Equipment
+```http
+GET /equipment
+Authorization: Bearer {token}
+
+Query Parameters:
+- page: number (default: 1)
+- limit: number (default: 10)
+- search: string
+- category: EquipmentCategory
+- department: Department
+- isScrap: boolean
+```
+
+#### Create Equipment
+```http
+POST /equipment
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "name": "CNC Machine 01",
+  "serialNumber": "CNC-2024-001",
+  "category": "MECHANICAL",
+  "department": "PRODUCTION",
+  "physicalLocation": "Building A, Floor 2",
+  "purchaseDate": "2024-01-15",
+  "warrantyExpiry": "2026-01-15",
+  "notes": "High-precision CNC machine"
+}
+```
+
+### Request Endpoints
+
+#### Get All Requests
+```http
+GET /requests
+Authorization: Bearer {token}
+
+Query Parameters:
+- page, limit, status, type, equipmentId, teamId
+- assignedToId, createdById, isPending
+- startDate, endDate
+```
+
+#### Create Request
+```http
+POST /requests
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "subject": "Machine not starting",
+  "description": "CNC machine shows error code E404",
+  "equipmentId": "equipment_id",
+  "type": "CORRECTIVE",
+  "scheduledDate": "2024-12-28T10:00:00Z",
+  "teamId": "team_id"
+}
+```
+
+#### Update Request Status
+```http
+PATCH /requests/:id/status
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "status": "REPAIRED",
+  "durationHours": 2.5
+}
+```
+
+#### Approve Request
+```http
+POST /requests/:id/approve
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "teamId": "team_id",
+  "assignedToId": "technician_id"
+}
+```
+
+### Report Endpoints
+
+```http
+GET /reports/dashboard        # Dashboard statistics
+GET /reports/by-team          # Requests by team
+GET /reports/by-category      # Requests by category
+GET /reports/by-status        # Requests by status
+GET /reports/duration         # Duration analysis
+Authorization: Bearer {token}
+```
 
 ---
 
-## 📊 Business Logic & Automation
+## 👥 User Roles & Permissions
 
-### Smart Workflows
-- ✨ **Auto-fill**: Equipment selection auto-populates category & team
-- 🚫 **Scrap Prevention**: Scrapped equipment cannot receive new requests
-- 🔔 **Overdue Detection**: Automatic flagging when scheduled date passes
-- 📝 **Maintenance History**: Track all work done on each equipment
+| Feature | Admin | Manager | Technician | User |
+|---------|-------|---------|------------|------|
+| **Dashboard Access** | ✅ | ✅ | ✅ | ✅ |
+| **View Equipment** | ✅ | ✅ | ✅ | ✅ |
+| **Create Equipment** | ✅ | ✅ | ✅ | ❌ |
+| **Edit Equipment** | ✅ | ✅ | ✅ | ❌ |
+| **Delete Equipment** | ✅ | ❌ | ❌ | ❌ |
+| **View All Requests** | ✅ | ✅ | ✅* | ✅* |
+| **Create Request** | ✅ | ✅ | ✅ | ✅** |
+| **Edit Request** | ✅ | ✅ | ✅* | ✅*** |
+| **Change Request Status** | ✅ | ✅ | ✅* | ❌ |
+| **Approve/Reject Request** | ✅ | ✅ | ❌ | ❌ |
+| **Manage Teams** | ✅ | ✅ | ❌ | ❌ |
+| **Manage Users** | ✅ | ❌ | ❌ | ❌ |
+| **View Reports** | ✅ | ✅ | ✅ | ✅ |
 
-### Workflow Rules
-1. **Corrective Requests**: 
-   - Created by any user
-   - No scheduled date required
-   - Immediate attention workflow
-
-2. **Preventive Requests**:
-   - Created by managers only
-   - Scheduled date required
-   - Appears in calendar view
-
-3. **Status Transitions**:
-   - NEW → IN_PROGRESS (technician assigns self)
-   - IN_PROGRESS → REPAIRED (work completed)
-   - IN_PROGRESS → SCRAP (equipment beyond repair, auto-marks equipment)
-
-4. **RBAC Filtering**:
-   - USER: See only own requests
-   - TECHNICIAN: See team requests
-   - MANAGER/ADMIN: See all requests
+**Notes:**
+- *Technician: Only assigned requests
+- **User requests require manager approval
+- ***Users: Only own NEW requests
 
 ---
 
-## 🎯 API Endpoints
+## 🗄️ Database Schema
 
-### Authentication
-- `POST /api/v1/auth/register` - Register new user
-- `POST /api/v1/auth/login` - Login (returns JWT)
-- `GET /api/v1/auth/me` - Get current user
+### Core Models
 
-### Equipment
-- `GET /api/v1/equipment` - List all equipment (with filters)
-- `POST /api/v1/equipment` - Create equipment
-- `GET /api/v1/equipment/:id` - Get equipment details
-- `PATCH /api/v1/equipment/:id` - Update equipment
-- `DELETE /api/v1/equipment/:id` - Delete equipment
+#### User
+```typescript
+{
+  id: string              // Unique identifier
+  email: string           // Unique email
+  password: string        // Hashed password
+  name: string           // Full name
+  role: UserRole         // ADMIN | MANAGER | TECHNICIAN | USER
+  isActive: boolean      // Account status
+}
+```
 
-### Teams
-- `GET /api/v1/teams` - List all teams
-- `POST /api/v1/teams` - Create team
-- `PATCH /api/v1/teams/:id` - Update team
-- `DELETE /api/v1/teams/:id` - Delete team
+#### Equipment
+```typescript
+{
+  id: string
+  name: string
+  serialNumber: string   // Unique
+  category: EquipmentCategory
+  department: Department
+  physicalLocation: string
+  purchaseDate: DateTime
+  warrantyExpiry: DateTime?
+  isScrap: boolean
+  notes: string?
+}
+```
 
-### Maintenance Requests
-- `GET /api/v1/requests` - List requests (role-filtered)
-- `POST /api/v1/requests` - Create request
-- `PATCH /api/v1/requests/:id/status` - Update status
-- `PATCH /api/v1/requests/:id/assign` - Assign technician
-- `GET /api/v1/requests/calendar` - Calendar view
-- `GET /api/v1/requests/overdue` - Overdue requests
+#### MaintenanceRequest
+```typescript
+{
+  id: string
+  subject: string
+  description: string
+  type: RequestType      // CORRECTIVE | PREVENTIVE
+  status: RequestStatus  // NEW | IN_PROGRESS | REPAIRED | SCRAP
+  scheduledDate: DateTime
+  completedAt: DateTime?
+  durationHours: number?
+  isPending: boolean     // Requires approval
+  approvedAt: DateTime?
+}
+```
 
-### Reports
-- `GET /api/v1/reports/dashboard` - Dashboard stats
-- `GET /api/v1/reports/by-team` - Requests by team
-- `GET /api/v1/reports/by-category` - Requests by category
-- `GET /api/v1/reports/duration` - Duration analysis
+#### MaintenanceTeam
+```typescript
+{
+  id: string
+  name: string
+  description: string?
+  isActive: boolean
+}
+```
 
-**See [API.md](docs/API.md) for complete documentation with curl examples.**
+---
+
+## 🎯 Features in Detail
+
+### Kanban Board
+- **Drag & Drop**: Move requests between status columns
+- **Real-time Updates**: Automatic sync across users
+- **Permission Control**: Role-based drag permissions
+- **Duration Dialog**: Required input when marking as REPAIRED
+- **Visual Indicators**: Color-coded status badges
+
+### Calendar View
+- **Month/Week/Day Views**: FullCalendar integration
+- **Drag to Reschedule**: Visual date management
+- **Color Coding**: Requests by type and status
+- **Quick Info**: Hover for request details
+- **Click to Edit**: Direct navigation to request page
+
+### Approval Workflow
+1. User creates a maintenance request
+2. Request is marked as **Pending Approval**
+3. Manager sees request in **Pending Requests** page
+4. Manager reviews request details
+5. Manager assigns team and specific technician
+6. Manager approves or rejects
+7. Approved requests become active for technicians
+
+### Equipment Tracking
+- **Uptime Calculation**: Based on active vs. repaired requests
+- **Maintenance History**: Timeline of all requests
+- **Status Indicators**: Visual status badges
+- **Associated Requests**: View all related maintenance
+- **Scrap Management**: Mark and track scrapped equipment
+
+---
+
+## 💻 Development
+
+### Backend Development
+
+```bash
+cd backend
+
+# Run in development mode
+npm run dev
+
+# Build for production
+npm run build
+
+# Generate Prisma Client
+npm run prisma:generate
+
+# Create migration
+npm run prisma:migrate
+
+# Open Prisma Studio
+npm run prisma:studio
+
+# Seed database
+npm run db:seed
+```
+
+### Frontend Development
+
+```bash
+cd frontend
+
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm start
+
+# Run linter
+npm run lint
+```
+
+### Database Migrations
+
+```bash
+# Create new migration
+npx prisma migrate dev --name migration_name
+
+# Apply migrations to production
+npx prisma migrate deploy
+
+# Reset database (WARNING: Deletes all data)
+npx prisma migrate reset
+
+# Generate Prisma Client
+npx prisma generate
+```
 
 ---
 
 ## 🚀 Deployment
 
-### Backend (Railway)
-1. Push code to GitHub
-2. Connect repository to Railway
-3. Add environment variables
-4. Deploy automatically on push
+### Backend Deployment (Railway)
 
-### Frontend (Vercel)
-1. Push code to GitHub
-2. Import project to Vercel
-3. Add environment variables
-4. Deploy automatically on push
+1. Create Railway account at [railway.app](https://railway.app)
+2. Add PostgreSQL database
+3. Deploy from GitHub
+4. Set environment variables:
+   - `DATABASE_URL` (auto-provided)
+   - `JWT_SECRET`
+   - `NODE_ENV=production`
+   - `FRONTEND_URL`
+5. Run migrations: `npx prisma migrate deploy`
 
-**Detailed deployment guide coming in Phase 7.**
+### Frontend Deployment (Vercel)
 
----
-
-## 🛠️ Development Status
-
-| Phase | Status | Description |
-|-------|--------|-------------|
-| Phase 1 | ✅ Complete | Architecture & planning |
-| Phase 2 | ✅ Complete | Database design & schema |
-| Phase 3 | ✅ Complete | Backend APIs (Auth, CRUD, Reports) |
-| Phase 4 | ✅ Complete | Frontend foundation (Auth, Dashboard, UI) |
-| Phase 5 | 🚧 In Progress | Core screens (Equipment, Kanban, Calendar) |
-| Phase 6 | ✅ Complete | Database optimization (13 composite indexes, connection pooling) |
-| Phase 7 | ⏳ Ready | Deployment & production setup |
-
-**Project Status**: 98% Complete - Production Ready
-
-**Last Updated**: December 27, 2025
+1. Create Vercel account at [vercel.com](https://vercel.com)
+2. Import GitHub repository
+3. Set environment variables:
+   - `NEXT_PUBLIC_API_URL`
+   - `NEXTAUTH_URL`
+   - `NEXTAUTH_SECRET`
+4. Deploy
 
 ---
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Node.js >= 18.0.0
-- PostgreSQL >= 13
-- npm or yarn
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/gearguard.git
-   cd gearguard
-   ```
-
-2. **Setup Backend**
-   ```bash
-   cd backend
-   npm install
-   cp .env.example .env
-   # Edit .env with your database credentials
-   npx prisma migrate dev
-   npm run db:seed
-   npm run dev
-   ```
-
-3. **Setup Frontend**
-   ```bash
-   cd frontend
-   npm install
-   cp .env.example .env.local
-   # Edit .env.local with your API URL
-   npm run dev
-   ```
-
-4. **Access the application**
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:5000/api/v1
-
-### Default Credentials
-After seeding the database:
-- **Admin**: admin@gearguard.com / Admin@123
-- **Manager**: manager@gearguard.com / Manager@123
-- **Technician**: tech1@gearguard.com / Tech@123
-
-**⚠️ Change default passwords in production!**
-
----
-
-## 📚 Documentation
-
-- [Quick Start Guide](./docs/QUICKSTART.md)
-- [Database Optimization Report](./DATABASE_OPTIMIZATION.md)
-- [Performance Testing Guide](./PERFORMANCE_TESTING.md)
-- [Project Status](./PROJECT_STATUS.md)
-- [API Documentation](./docs/API.md)
-
----
-
-## 🔒 Security
-
-- **Authentication**: JWT-based with 7-day expiry
-- **Password Hashing**: bcrypt with salt rounds
-- **Role-Based Access Control**: 4 user roles with granular permissions
-- **Input Validation**: Zod schemas on all endpoints
-- **SQL Injection Protection**: Prisma ORM parameterized queries
-
-**Found a security vulnerability?** Please email security@gearguard.com (do not create public issues)
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for detailed guidelines.
-
----
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
 
 ---
 
 ## 🙏 Acknowledgments
 
-- Next.js team for the amazing React framework
-- Prisma for the excellent ORM
-- Railway for database hosting
-- All open-source contributors
+- [Next.js](https://nextjs.org/) - React Framework
+- [Prisma](https://www.prisma.io/) - Next-generation ORM
+- [TailwindCSS](https://tailwindcss.com/) - Utility-first CSS
+- [TanStack Query](https://tanstack.com/query) - Async state management
+- [FullCalendar](https://fullcalendar.io/) - Event calendar
+- [dnd-kit](https://dndkit.com/) - Drag and drop toolkit
 
 ---
 
-## 📧 Contact & Support
+## 📊 Project Status
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/gearguard/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/gearguard/discussions)
-- **Email**: support@gearguard.com
-- **Documentation**: [docs/](./docs/)
+**Status**: ✅ Production Ready
+
+**Version**: 1.0.0
+
+**Last Updated**: December 27, 2025
 
 ---
-
-**Built with ❤️ using Next.js 16, Express, Prisma, and PostgreSQL**
